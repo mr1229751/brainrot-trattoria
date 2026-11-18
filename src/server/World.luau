@@ -155,7 +155,7 @@ local function buildBase(workspaceFolder, index, center)
 	local laser = newPart(folder, "GateLaser", Vector3.new(0.5, 6, 8), Color3.fromRGB(255, 40, 40), CFrame.new(gateX, 3.5, center.Z), Enum.Material.Neon)
 	laser.Transparency = 0.35
 	laser.CanCollide = false
-	laser.Visible = false
+	laser.Transparency = 1
 	base.Gate = postA
 	base.GateLaser = laser
 	-- Gate countdown sign above the beam.

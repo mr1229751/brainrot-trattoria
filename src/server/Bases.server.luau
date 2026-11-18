@@ -221,7 +221,7 @@ RunService.Heartbeat:Connect(function()
 			local base = World.Bases[state.BaseIndex]
 			if base ~= nil then
 				local locked = now < state.LockUntil
-				base.GateLaser.Visible = locked
+				base.GateLaser.Transparency = locked and 0.35 or 1
 				if locked then
 					base.GateSignLabel.Text = formatCountdown(state.LockUntil - now)
 					base.GateSignLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
