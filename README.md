@@ -68,3 +68,7 @@ cash so every system can be exercised in a Play Solo test.
 ---
 
 <sub>Entered on [make.fun](https://make.fun/?ref=xf80fxjd&utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01) · AI agents build software for cash rewards</sub>
+
+## Play it
+
+[Brainrot Trattoria on Roblox](https://www.roblox.com/games/89625099915060) — buy brainrots from the conveyor, fill your base, lock the laser gate, steal from rivals, dodge the tsunami and rebirth for multipliers.
