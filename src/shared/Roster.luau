@@ -9,13 +9,13 @@ local Roster = {}
 
 -- Rarity colours, as the tag and the world show them.
 Roster.RARITY_COLORS = {
-	Common = Color3.fromRGB(170, 170, 170),
-	Uncommon = Color3.fromRGB(80, 220, 90),
-	Rare = Color3.fromRGB(80, 160, 255),
-	Epic = Color3.fromRGB(190, 90, 255),
-	Legendary = Color3.fromRGB(255, 200, 40),
-	Mythic = Color3.fromRGB(255, 90, 130),
-	Secret = Color3.fromRGB(140, 60, 255),
+	Common = Color3.fromRGB(214, 206, 194),
+	Uncommon = Color3.fromRGB(112, 216, 132),
+	Rare = Color3.fromRGB(96, 178, 250),
+	Epic = Color3.fromRGB(198, 108, 252),
+	Legendary = Color3.fromRGB(252, 204, 68),
+	Mythic = Color3.fromRGB(252, 104, 146),
+	Secret = Color3.fromRGB(162, 92, 252),
 }
 
 Roster.MUTATIONS = {
@@ -24,15 +24,17 @@ Roster.MUTATIONS = {
 	void = { Id = "void", Name = "Vuoto Astrale", Multiplier = 25, Chance = 0.002, Color = Color3.fromRGB(180, 60, 255) },
 }
 
+local CREATURE_SCALE = 1.14
+
 -- One primitive part inside a character model. `cf` is relative to the model's
--- origin (feet at Y = 0, facing +Z).
+-- origin (feet at Y = 0, facing +Z), uniformly scaled by CREATURE_SCALE.
 local function part(model, name, shape, size, color, cf, material)
 	local p = Instance.new("Part")
 	p.Name = name
 	p.Shape = shape
-	p.Size = size
+	p.Size = size * CREATURE_SCALE
 	p.Color = color
-	p.CFrame = cf
+	p.CFrame = CFrame.new(cf.Position * CREATURE_SCALE) * (cf - cf.Position)
 	p.Material = material or Enum.Material.SmoothPlastic
 	p.Anchored = true
 	p.CanCollide = false
@@ -61,134 +63,130 @@ end
 
 -- A horizontal cylinder pointing along Z (rotate Y by 90 degrees).
 local function hCylinder(model, name, length, diameter, color, cf, material)
-	return part(model, name, Enum.PartType.Cylinder, Vector3.new(length, diameter, diameter), color, cf * CFrame.Angles(0, math.rad(90), 0), material)
+	local p = part(model, name, Enum.PartType.Cylinder, Vector3.new(length, diameter, diameter), color, cf * CFrame.Angles(0, math.rad(90), 0), material)
+	return p
 end
 
--- Two black ball eyes and a small black mouth on the front (+Z) of a body.
+-- Two dark ball eyes and a small mouth on the front (+Z) of a body.
 -- `front` is the CFrame of the face plane; eyes sit on it, mouth below them.
 local function addFace(model, front, eyeSpread, eyeHeight, mouthHeight, angry)
-	local leftEye = ball(model, "EyeLeft", Vector3.new(0.45, 0.45, 0.45), Color3.fromRGB(20, 20, 20), front * CFrame.new(-eyeSpread, eyeHeight, 0.1))
-	local rightEye = ball(model, "EyeRight", Vector3.new(0.45, 0.45, 0.45), Color3.fromRGB(20, 20, 20), front * CFrame.new(eyeSpread, eyeHeight, 0.1))
+	local eyeColor = Color3.fromRGB(28, 24, 24)
+	local leftEye = ball(model, "EyeLeft", Vector3.new(0.45, 0.45, 0.45), eyeColor, front * CFrame.new(-eyeSpread, eyeHeight, 0.1))
+	local rightEye = ball(model, "EyeRight", Vector3.new(0.45, 0.45, 0.45), eyeColor, front * CFrame.new(eyeSpread, eyeHeight, 0.1))
 	if angry then
-		leftEye.CFrame = front * CFrame.new(-eyeSpread, eyeHeight, 0.1) * CFrame.Angles(0, 0, math.rad(-25))
-		rightEye.CFrame = front * CFrame.new(eyeSpread, eyeHeight, 0.1) * CFrame.Angles(0, 0, math.rad(25))
+		leftEye.CFrame = CFrame.new((front * CFrame.new(-eyeSpread, eyeHeight, 0.1)).Position * CREATURE_SCALE) * (front - front.Position) * CFrame.Angles(0, 0, math.rad(-25))
+		rightEye.CFrame = CFrame.new((front * CFrame.new(eyeSpread, eyeHeight, 0.1)).Position * CREATURE_SCALE) * (front - front.Position) * CFrame.Angles(0, 0, math.rad(25))
 	end
-	block(model, "Mouth", Vector3.new(0.7, 0.18, 0.2), Color3.fromRGB(20, 20, 20), front * CFrame.new(0, mouthHeight, 0.1) * CFrame.Angles(0, 0, math.rad(12)))
+	block(model, "Mouth", Vector3.new(0.7, 0.18, 0.2), eyeColor, front * CFrame.new(0, mouthHeight, 0.1) * CFrame.Angles(0, 0, math.rad(12)))
 end
 
--- 1. Gnocchi Guapo — Common — yellow cylinder torso, ball feet, tilted chef hat.
+-- 1. Gnocchi Guapo — Common — pastel buttercream torso, cream feet, tilted chef hat.
 local function buildGnocchi(model)
-	local torso = vCylinder(model, "Torso", 3.2, 3.0, Color3.fromRGB(255, 220, 80), CFrame.new(0, 2.0, 0))
-	ball(model, "FootLeft", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(255, 240, 160), CFrame.new(-0.8, 0.45, 0.3))
-	ball(model, "FootRight", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(255, 240, 160), CFrame.new(0.8, 0.45, 0.3))
-	local hat = vCylinder(model, "ChefHat", 1.6, 2.2, Color3.fromRGB(245, 245, 245), CFrame.new(0.3, 4.1, 0) * CFrame.Angles(0, 0, math.rad(-14)))
-	hat.Material = Enum.Material.Fabric
-	ball(model, "HatPuff", Vector3.new(1.2, 1.2, 1.2), Color3.fromRGB(255, 255, 255), CFrame.new(0.3, 5.0, 0))
-	block(model, "Mustache", Vector3.new(1.2, 0.25, 0.25), Color3.fromRGB(60, 40, 20), CFrame.new(0, 1.55, 1.55))
-	hCylinder(model, "Spoon", 1.8, 0.25, Color3.fromRGB(200, 200, 210), CFrame.new(1.7, 2.0, 0.6) * CFrame.Angles(math.rad(20), 0, math.rad(30)), Enum.Material.Metal)
-	ball(model, "SpoonBowl", Vector3.new(0.6, 0.6, 0.3), Color3.fromRGB(200, 200, 210), CFrame.new(2.2, 2.6, 0.8), Enum.Material.Metal)
+	local torso = vCylinder(model, "Torso", 3.2, 3.0, Color3.fromRGB(250, 226, 150), CFrame.new(0, 2.0, 0))
+	ball(model, "FootLeft", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(252, 240, 198), CFrame.new(-0.8, 0.45, 0.3))
+	ball(model, "FootRight", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(252, 240, 198), CFrame.new(0.8, 0.45, 0.3))
+	vCylinder(model, "ChefHat", 1.6, 2.2, Color3.fromRGB(252, 249, 242), CFrame.new(0.3, 4.1, 0) * CFrame.Angles(0, 0, math.rad(-14)))
+	ball(model, "HatPuff", Vector3.new(1.2, 1.2, 1.2), Color3.fromRGB(255, 253, 248), CFrame.new(0.3, 5.0, 0))
+	block(model, "Mustache", Vector3.new(1.2, 0.25, 0.25), Color3.fromRGB(108, 74, 50), CFrame.new(0, 1.55, 1.55))
+	hCylinder(model, "Spoon", 1.8, 0.25, Color3.fromRGB(214, 216, 224), CFrame.new(1.7, 2.0, 0.6) * CFrame.Angles(math.rad(20), 0, math.rad(30)), Enum.Material.Metal)
+	ball(model, "SpoonBowl", Vector3.new(0.6, 0.6, 0.3), Color3.fromRGB(214, 216, 224), CFrame.new(2.2, 2.6, 0.8), Enum.Material.Metal)
 	addFace(model, CFrame.new(0, 2.0, 1.5), 0.6, 0.7, -0.1, false)
 	return torso
 end
 
--- 2. Tostada Tartaruga — Common — flat tan shell, green head and limbs, tomato balls.
+-- 2. Tostada Tartaruga — Common — pastel biscuit shell, sage head/limbs, coral tomatoes.
 local function buildTostada(model)
-	local shell = vCylinder(model, "Shell", 1.2, 4.4, Color3.fromRGB(210, 160, 90), CFrame.new(0, 1.6, 0))
-	shell.Material = Enum.Material.Wood
-	block(model, "Head", Vector3.new(1.6, 1.2, 1.4), Color3.fromRGB(90, 200, 90), CFrame.new(0, 1.7, 2.6))
-	ball(model, "Tomato1", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(230, 50, 50), CFrame.new(-1.0, 2.4, -0.8))
-	ball(model, "Tomato2", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(230, 50, 50), CFrame.new(1.0, 2.4, 0.6))
-	ball(model, "Tomato3", Vector3.new(0.8, 0.8, 0.8), Color3.fromRGB(230, 50, 50), CFrame.new(0.1, 2.4, -1.4))
-	wedge(model, "LettuceLeaf", Vector3.new(1.6, 0.4, 2.2), Color3.fromRGB(90, 220, 90), CFrame.new(0, 2.3, 0.8) * CFrame.Angles(math.rad(-12), 0, 0))
-	block(model, "LegFL", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(90, 200, 90), CFrame.new(-1.6, 0.4, 1.6))
-	block(model, "LegFR", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(90, 200, 90), CFrame.new(1.6, 0.4, 1.6))
-	block(model, "LegBL", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(90, 200, 90), CFrame.new(-1.6, 0.4, -1.6))
-	block(model, "LegBR", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(90, 200, 90), CFrame.new(1.6, 0.4, -1.6))
+	local shell = vCylinder(model, "Shell", 1.2, 4.4, Color3.fromRGB(230, 196, 146), CFrame.new(0, 1.6, 0))
+	block(model, "Head", Vector3.new(1.6, 1.2, 1.4), Color3.fromRGB(150, 214, 148), CFrame.new(0, 1.7, 2.6))
+	ball(model, "Tomato1", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(236, 116, 106), CFrame.new(-1.0, 2.4, -0.8))
+	ball(model, "Tomato2", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(236, 116, 106), CFrame.new(1.0, 2.4, 0.6))
+	ball(model, "Tomato3", Vector3.new(0.8, 0.8, 0.8), Color3.fromRGB(236, 116, 106), CFrame.new(0.1, 2.4, -1.4))
+	wedge(model, "LettuceLeaf", Vector3.new(1.6, 0.4, 2.2), Color3.fromRGB(164, 226, 152), CFrame.new(0, 2.3, 0.8) * CFrame.Angles(math.rad(-12), 0, 0))
+	block(model, "LegFL", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(150, 214, 148), CFrame.new(-1.6, 0.4, 1.6))
+	block(model, "LegFR", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(150, 214, 148), CFrame.new(1.6, 0.4, 1.6))
+	block(model, "LegBL", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(150, 214, 148), CFrame.new(-1.6, 0.4, -1.6))
+	block(model, "LegBR", Vector3.new(0.7, 0.8, 0.7), Color3.fromRGB(150, 214, 148), CFrame.new(1.6, 0.4, -1.6))
 	addFace(model, CFrame.new(0, 1.7, 3.3), 0.35, 0.25, -0.3, false)
 	return shell
 end
 
--- 3. Baguette Babbuino — Uncommon — long tan body, pink rear, eyes on the crust.
+-- 3. Baguette Babbuino — Uncommon — warm brioche body, pastel rose rear, eyes on crust.
 local function buildBaguette(model)
-	local body = hCylinder(model, "Body", 5.2, 2.2, Color3.fromRGB(215, 165, 95), CFrame.new(0, 2.2, 0))
-	body.Material = Enum.Material.Wood
-	ball(model, "Rear", Vector3.new(2.0, 2.0, 2.0), Color3.fromRGB(255, 150, 170), CFrame.new(0, 2.2, -2.6))
-	block(model, "ArmLeft", Vector3.new(0.6, 1.6, 0.6), Color3.fromRGB(120, 80, 50), CFrame.new(-1.3, 1.4, 1.2))
-	block(model, "ArmRight", Vector3.new(0.6, 1.6, 0.6), Color3.fromRGB(120, 80, 50), CFrame.new(1.3, 1.4, 1.2))
-	block(model, "LegLeft", Vector3.new(0.7, 1.0, 0.7), Color3.fromRGB(120, 80, 50), CFrame.new(-0.8, 0.5, -1.6))
-	block(model, "LegRight", Vector3.new(0.7, 1.0, 0.7), Color3.fromRGB(120, 80, 50), CFrame.new(0.8, 0.5, -1.6))
-	ball(model, "EyeLeft", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(20, 20, 20), CFrame.new(-0.5, 3.4, 1.6))
-	ball(model, "EyeRight", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(20, 20, 20), CFrame.new(0.5, 3.4, 1.6))
-	block(model, "Mouth", Vector3.new(0.8, 0.18, 0.2), Color3.fromRGB(20, 20, 20), CFrame.new(0, 2.9, 2.0))
+	local body = hCylinder(model, "Body", 5.2, 2.2, Color3.fromRGB(232, 188, 128), CFrame.new(0, 2.2, 0))
+	ball(model, "Rear", Vector3.new(2.0, 2.0, 2.0), Color3.fromRGB(248, 172, 188), CFrame.new(0, 2.2, -2.6))
+	block(model, "ArmLeft", Vector3.new(0.6, 1.6, 0.6), Color3.fromRGB(162, 116, 82), CFrame.new(-1.3, 1.4, 1.2))
+	block(model, "ArmRight", Vector3.new(0.6, 1.6, 0.6), Color3.fromRGB(162, 116, 82), CFrame.new(1.3, 1.4, 1.2))
+	block(model, "LegLeft", Vector3.new(0.7, 1.0, 0.7), Color3.fromRGB(162, 116, 82), CFrame.new(-0.8, 0.5, -1.6))
+	block(model, "LegRight", Vector3.new(0.7, 1.0, 0.7), Color3.fromRGB(162, 116, 82), CFrame.new(0.8, 0.5, -1.6))
+	ball(model, "EyeLeft", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(28, 24, 24), CFrame.new(-0.5, 3.4, 1.6))
+	ball(model, "EyeRight", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(28, 24, 24), CFrame.new(0.5, 3.4, 1.6))
+	block(model, "Mouth", Vector3.new(0.8, 0.18, 0.2), Color3.fromRGB(28, 24, 24), CFrame.new(0, 2.9, 2.0))
 	return body
 end
 
--- 4. Limoncello Lama — Uncommon — yellow ball belly, tall neck, leaf ears, sunglasses.
+-- 4. Limoncello Lama — Uncommon — sunny lemon sorbet belly, tall neck, mint ears, shades.
 local function buildLimoncello(model)
-	local belly = ball(model, "Belly", Vector3.new(3.2, 3.2, 3.2), Color3.fromRGB(255, 235, 90), CFrame.new(0, 1.8, 0))
-	vCylinder(model, "Neck", 2.6, 1.0, Color3.fromRGB(255, 235, 90), CFrame.new(0, 4.4, 0))
-	ball(model, "Head", Vector3.new(1.6, 1.4, 1.6), Color3.fromRGB(255, 235, 90), CFrame.new(0, 6.0, 0))
-	wedge(model, "EarLeft", Vector3.new(0.7, 1.4, 0.4), Color3.fromRGB(80, 200, 90), CFrame.new(-0.7, 6.9, 0) * CFrame.Angles(0, 0, math.rad(20)))
-	wedge(model, "EarRight", Vector3.new(0.7, 1.4, 0.4), Color3.fromRGB(80, 200, 90), CFrame.new(0.7, 6.9, 0) * CFrame.Angles(0, 0, math.rad(-20)))
-	block(model, "Glasses", Vector3.new(1.5, 0.5, 0.3), Color3.fromRGB(250, 250, 250), CFrame.new(0, 6.1, 0.8), Enum.Material.Glass)
-	block(model, "LegLeft", Vector3.new(0.6, 1.0, 0.6), Color3.fromRGB(240, 210, 60), CFrame.new(-0.9, 0.5, 0.6))
-	block(model, "LegRight", Vector3.new(0.6, 1.0, 0.6), Color3.fromRGB(240, 210, 60), CFrame.new(0.9, 0.5, 0.6))
+	local belly = ball(model, "Belly", Vector3.new(3.2, 3.2, 3.2), Color3.fromRGB(252, 236, 132), CFrame.new(0, 1.8, 0))
+	vCylinder(model, "Neck", 2.6, 1.0, Color3.fromRGB(252, 236, 132), CFrame.new(0, 4.4, 0))
+	ball(model, "Head", Vector3.new(1.6, 1.4, 1.6), Color3.fromRGB(252, 236, 132), CFrame.new(0, 6.0, 0))
+	wedge(model, "EarLeft", Vector3.new(0.7, 1.4, 0.4), Color3.fromRGB(122, 212, 132), CFrame.new(-0.7, 6.9, 0) * CFrame.Angles(0, 0, math.rad(20)))
+	wedge(model, "EarRight", Vector3.new(0.7, 1.4, 0.4), Color3.fromRGB(122, 212, 132), CFrame.new(0.7, 6.9, 0) * CFrame.Angles(0, 0, math.rad(-20)))
+	block(model, "Glasses", Vector3.new(1.5, 0.5, 0.3), Color3.fromRGB(54, 62, 78), CFrame.new(0, 6.1, 0.8))
+	block(model, "LegLeft", Vector3.new(0.6, 1.0, 0.6), Color3.fromRGB(238, 210, 98), CFrame.new(-0.9, 0.5, 0.6))
+	block(model, "LegRight", Vector3.new(0.6, 1.0, 0.6), Color3.fromRGB(238, 210, 98), CFrame.new(0.9, 0.5, 0.6))
 	return belly
 end
 
--- 5. Cannoli Caimano — Rare — beige tube, cream ends, green snout, white teeth.
+-- 5. Cannoli Caimano — Rare — golden pastry tube, bright ricotta ends, emerald snout.
 local function buildCannoli(model)
-	local body = hCylinder(model, "Body", 4.6, 2.4, Color3.fromRGB(220, 185, 130), CFrame.new(0, 2.0, 0))
-	body.Material = Enum.Material.Wood
-	ball(model, "CreamFront", Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(255, 250, 235), CFrame.new(0, 2.0, 2.3))
-	ball(model, "CreamBack", Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(255, 250, 235), CFrame.new(0, 2.0, -2.3))
-	block(model, "Snout", Vector3.new(1.8, 0.9, 1.2), Color3.fromRGB(90, 180, 90), CFrame.new(0, 1.7, 3.4))
+	local body = hCylinder(model, "Body", 4.6, 2.4, Color3.fromRGB(232, 178, 104), CFrame.new(0, 2.0, 0))
+	ball(model, "CreamFront", Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(255, 250, 238), CFrame.new(0, 2.0, 2.3))
+	ball(model, "CreamBack", Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(255, 250, 238), CFrame.new(0, 2.0, -2.3))
+	block(model, "Snout", Vector3.new(1.8, 0.9, 1.2), Color3.fromRGB(72, 200, 104), CFrame.new(0, 1.7, 3.4))
 	wedge(model, "ToothLeft", Vector3.new(0.35, 0.5, 0.3), Color3.fromRGB(255, 255, 255), CFrame.new(-0.5, 1.35, 3.9))
 	wedge(model, "ToothRight", Vector3.new(0.35, 0.5, 0.3), Color3.fromRGB(255, 255, 255), CFrame.new(0.5, 1.35, 3.9))
-	ball(model, "EyeLeft", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(20, 20, 20), CFrame.new(-0.6, 2.9, 1.9))
-	ball(model, "EyeRight", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(20, 20, 20), CFrame.new(0.6, 2.9, 1.9))
-	block(model, "Tail", Vector3.new(0.9, 0.6, 1.8), Color3.fromRGB(90, 180, 90), CFrame.new(0, 1.6, -3.4))
+	ball(model, "EyeLeft", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(28, 24, 24), CFrame.new(-0.6, 2.9, 1.9))
+	ball(model, "EyeRight", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(28, 24, 24), CFrame.new(0.6, 2.9, 1.9))
+	block(model, "Tail", Vector3.new(0.9, 0.6, 1.8), Color3.fromRGB(72, 200, 104), CFrame.new(0, 1.6, -3.4))
 	return body
 end
 
--- 6. Vespa Vombato — Rare — brown wombat block on a red wedge scooter.
+-- 6. Vespa Vombato — Rare — warm chestnut wombat on a bright cherry-red scooter.
 local function buildVespa(model)
-	local scooter = wedge(model, "Scooter", Vector3.new(2.2, 1.0, 4.6), Color3.fromRGB(220, 40, 40), CFrame.new(0, 1.0, 0))
-	scooter.Material = Enum.Material.Metal
-	vCylinder(model, "WheelFront", 0.5, 1.2, Color3.fromRGB(25, 25, 25), CFrame.new(0, 0.6, 2.2) * CFrame.Angles(math.rad(90), 0, 0))
-	vCylinder(model, "WheelBack", 0.5, 1.2, Color3.fromRGB(25, 25, 25), CFrame.new(0, 0.6, -2.2) * CFrame.Angles(math.rad(90), 0, 0))
-	local bars = hCylinder(model, "Handlebars", 1.8, 0.25, Color3.fromRGB(200, 200, 210), CFrame.new(0, 2.6, 2.0) * CFrame.Angles(0, 0, math.rad(90)))
+	local scooter = wedge(model, "Scooter", Vector3.new(2.2, 1.0, 4.6), Color3.fromRGB(238, 58, 58), CFrame.new(0, 1.0, 0))
+	vCylinder(model, "WheelFront", 0.5, 1.2, Color3.fromRGB(42, 42, 48), CFrame.new(0, 0.6, 2.2) * CFrame.Angles(math.rad(90), 0, 0))
+	vCylinder(model, "WheelBack", 0.5, 1.2, Color3.fromRGB(42, 42, 48), CFrame.new(0, 0.6, -2.2) * CFrame.Angles(math.rad(90), 0, 0))
+	local bars = hCylinder(model, "Handlebars", 1.8, 0.25, Color3.fromRGB(220, 224, 232), CFrame.new(0, 2.6, 2.0) * CFrame.Angles(0, 0, math.rad(90)), Enum.Material.Metal)
 	bars.Material = Enum.Material.Metal
-	block(model, "Wombat", Vector3.new(1.8, 1.6, 2.2), Color3.fromRGB(140, 95, 60), CFrame.new(0, 2.3, -0.4))
-	ball(model, "WombatHead", Vector3.new(1.4, 1.4, 1.4), Color3.fromRGB(150, 105, 70), CFrame.new(0, 3.2, 0.9))
-	ball(model, "Nose", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(20, 20, 20), CFrame.new(0, 3.1, 1.65))
-	ball(model, "EyeLeft", Vector3.new(0.35, 0.35, 0.35), Color3.fromRGB(20, 20, 20), CFrame.new(-0.4, 3.5, 1.5))
-	ball(model, "EyeRight", Vector3.new(0.35, 0.35, 0.35), Color3.fromRGB(20, 20, 20), CFrame.new(0.4, 3.5, 1.5))
+	block(model, "Wombat", Vector3.new(1.8, 1.6, 2.2), Color3.fromRGB(172, 118, 78), CFrame.new(0, 2.3, -0.4))
+	ball(model, "WombatHead", Vector3.new(1.4, 1.4, 1.4), Color3.fromRGB(184, 130, 88), CFrame.new(0, 3.2, 0.9))
+	ball(model, "Nose", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(28, 24, 24), CFrame.new(0, 3.1, 1.65))
+	ball(model, "EyeLeft", Vector3.new(0.35, 0.35, 0.35), Color3.fromRGB(28, 24, 24), CFrame.new(-0.4, 3.5, 1.5))
+	ball(model, "EyeRight", Vector3.new(0.35, 0.35, 0.35), Color3.fromRGB(28, 24, 24), CFrame.new(0.4, 3.5, 1.5))
 	return scooter
 end
 
--- 7. Espresso Elefante — Epic — white cup body, trunk pouring a neon coffee stream.
+-- 7. Espresso Elefante — Epic — porcelain cup body, gold saucer, glowing coffee stream.
 local function buildEspresso(model)
-	local cup = vCylinder(model, "Cup", 2.8, 3.4, Color3.fromRGB(245, 245, 240), CFrame.new(0, 1.9, 0))
-	cup.Material = Enum.Material.SmoothPlastic
-	vCylinder(model, "SaucerHat", 0.5, 4.0, Color3.fromRGB(255, 215, 0), CFrame.new(0, 3.6, 0))
-	ball(model, "Head", Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(235, 235, 230), CFrame.new(0, 4.4, 0))
-	hCylinder(model, "Trunk", 2.4, 0.7, Color3.fromRGB(235, 235, 230), CFrame.new(0, 4.0, 1.6) * CFrame.Angles(math.rad(55), 0, 0))
-	part(model, "CoffeeStream", Enum.PartType.Cylinder, Vector3.new(1.6, 0.5, 0.5), Color3.fromRGB(120, 60, 20), CFrame.new(0, 2.9, 2.6) * CFrame.Angles(0, 0, math.rad(90)), Enum.Material.Neon)
-	ball(model, "EarLeft", Vector3.new(1.2, 1.6, 0.5), Color3.fromRGB(230, 230, 225), CFrame.new(-1.6, 4.5, 0))
-	ball(model, "EarRight", Vector3.new(1.2, 1.6, 0.5), Color3.fromRGB(230, 230, 225), CFrame.new(1.6, 4.5, 0))
+	local cup = vCylinder(model, "Cup", 2.8, 3.4, Color3.fromRGB(250, 245, 236), CFrame.new(0, 1.9, 0))
+	vCylinder(model, "SaucerHat", 0.5, 4.0, Color3.fromRGB(252, 206, 62), CFrame.new(0, 3.6, 0), Enum.Material.Neon)
+	ball(model, "Head", Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(236, 228, 242), CFrame.new(0, 4.4, 0))
+	hCylinder(model, "Trunk", 2.4, 0.7, Color3.fromRGB(236, 228, 242), CFrame.new(0, 4.0, 1.6) * CFrame.Angles(math.rad(55), 0, 0))
+	part(model, "CoffeeStream", Enum.PartType.Cylinder, Vector3.new(1.6, 0.5, 0.5), Color3.fromRGB(204, 118, 48), CFrame.new(0, 2.9, 2.6) * CFrame.Angles(0, 0, math.rad(90)), Enum.Material.Neon)
+	ball(model, "EarLeft", Vector3.new(1.2, 1.6, 0.5), Color3.fromRGB(228, 218, 238), CFrame.new(-1.6, 4.5, 0))
+	ball(model, "EarRight", Vector3.new(1.2, 1.6, 0.5), Color3.fromRGB(228, 218, 238), CFrame.new(1.6, 4.5, 0))
 	addFace(model, CFrame.new(0, 4.4, 0.9), 0.35, 0.25, -0.35, false)
 	return cup
 end
 
--- 8. Lasagna Leviatano — Epic — stacked pasta layers, angry eyes on top.
+-- 8. Lasagna Leviatano — Epic — stacked pasta layers, glowing golden cheese top, angry eyes.
 local function buildLasagna(model)
 	local layerColors = {
-		Color3.fromRGB(220, 60, 40),
-		Color3.fromRGB(255, 210, 90),
-		Color3.fromRGB(240, 220, 180),
-		Color3.fromRGB(220, 60, 40),
-		Color3.fromRGB(255, 210, 90),
+		Color3.fromRGB(228, 66, 48),
+		Color3.fromRGB(252, 208, 84),
+		Color3.fromRGB(248, 236, 206),
+		Color3.fromRGB(228, 66, 48),
+		Color3.fromRGB(252, 208, 84),
 	}
 	local topLayer = nil
 	for i, color in ipairs(layerColors) do
@@ -196,83 +194,83 @@ local function buildLasagna(model)
 		layer:SetAttribute("LayerIndex", i)
 		topLayer = layer
 	end
-	block(model, "CheeseTop", Vector3.new(3.4, 0.4, 2.4), Color3.fromRGB(255, 230, 140), CFrame.new(0, 3.9, 0))
-	ball(model, "EyeLeft", Vector3.new(0.6, 0.6, 0.6), Color3.fromRGB(20, 20, 20), CFrame.new(-0.8, 4.3, 1.3))
-	ball(model, "EyeRight", Vector3.new(0.6, 0.6, 0.6), Color3.fromRGB(20, 20, 20), CFrame.new(0.8, 4.3, 1.3))
-	block(model, "BrowLeft", Vector3.new(0.9, 0.2, 0.2), Color3.fromRGB(20, 20, 20), CFrame.new(-0.8, 4.75, 1.35) * CFrame.Angles(0, 0, math.rad(25)))
-	block(model, "BrowRight", Vector3.new(0.9, 0.2, 0.2), Color3.fromRGB(20, 20, 20), CFrame.new(0.8, 4.75, 1.35) * CFrame.Angles(0, 0, math.rad(-25)))
+	block(model, "CheeseTop", Vector3.new(3.4, 0.4, 2.4), Color3.fromRGB(255, 222, 112), CFrame.new(0, 3.9, 0), Enum.Material.Neon)
+	ball(model, "EyeLeft", Vector3.new(0.6, 0.6, 0.6), Color3.fromRGB(28, 24, 24), CFrame.new(-0.8, 4.3, 1.3))
+	ball(model, "EyeRight", Vector3.new(0.6, 0.6, 0.6), Color3.fromRGB(28, 24, 24), CFrame.new(0.8, 4.3, 1.3))
+	block(model, "BrowLeft", Vector3.new(0.9, 0.2, 0.2), Color3.fromRGB(28, 24, 24), CFrame.new(-0.8, 4.75, 1.35) * CFrame.Angles(0, 0, math.rad(25)))
+	block(model, "BrowRight", Vector3.new(0.9, 0.2, 0.2), Color3.fromRGB(28, 24, 24), CFrame.new(0.8, 4.75, 1.35) * CFrame.Angles(0, 0, math.rad(-25)))
 	return topLayer
 end
 
--- 9. Prosciutto Pegaso — Legendary — pink body, white wedge wings, gold hooves.
+-- 9. Prosciutto Pegaso — Legendary — rose prosciutto body, pearl wings, glowing gold hooves.
 local function buildProsciutto(model)
-	local body = block(model, "Body", Vector3.new(2.2, 2.0, 3.6), Color3.fromRGB(255, 150, 170), CFrame.new(0, 2.2, 0))
-	wedge(model, "WingLeft", Vector3.new(0.4, 2.4, 3.0), Color3.fromRGB(250, 250, 250), CFrame.new(-1.6, 3.2, -0.4) * CFrame.Angles(0, 0, math.rad(35)))
-	wedge(model, "WingRight", Vector3.new(0.4, 2.4, 3.0), Color3.fromRGB(250, 250, 250), CFrame.new(1.6, 3.2, -0.4) * CFrame.Angles(0, 0, math.rad(-35)))
-	ball(model, "Head", Vector3.new(1.6, 1.6, 1.6), Color3.fromRGB(255, 170, 185), CFrame.new(0, 3.4, 1.8))
-	vCylinder(model, "LegFL", 1.4, 0.5, Color3.fromRGB(255, 215, 0), CFrame.new(-0.8, 0.7, 1.4), Enum.Material.Metal)
-	vCylinder(model, "LegFR", 1.4, 0.5, Color3.fromRGB(255, 215, 0), CFrame.new(0.8, 0.7, 1.4), Enum.Material.Metal)
-	vCylinder(model, "LegBL", 1.4, 0.5, Color3.fromRGB(255, 215, 0), CFrame.new(-0.8, 0.7, -1.4), Enum.Material.Metal)
-	vCylinder(model, "LegBR", 1.4, 0.5, Color3.fromRGB(255, 215, 0), CFrame.new(0.8, 0.7, -1.4), Enum.Material.Metal)
-	block(model, "Mane", Vector3.new(0.8, 1.6, 2.4), Color3.fromRGB(255, 255, 255), CFrame.new(0, 4.0, 0.6))
+	local body = block(model, "Body", Vector3.new(2.2, 2.0, 3.6), Color3.fromRGB(252, 142, 166), CFrame.new(0, 2.2, 0))
+	wedge(model, "WingLeft", Vector3.new(0.4, 2.4, 3.0), Color3.fromRGB(255, 252, 246), CFrame.new(-1.6, 3.2, -0.4) * CFrame.Angles(0, 0, math.rad(35)))
+	wedge(model, "WingRight", Vector3.new(0.4, 2.4, 3.0), Color3.fromRGB(255, 252, 246), CFrame.new(1.6, 3.2, -0.4) * CFrame.Angles(0, 0, math.rad(-35)))
+	ball(model, "Head", Vector3.new(1.6, 1.6, 1.6), Color3.fromRGB(255, 166, 186), CFrame.new(0, 3.4, 1.8))
+	vCylinder(model, "LegFL", 1.4, 0.5, Color3.fromRGB(255, 214, 64), CFrame.new(-0.8, 0.7, 1.4), Enum.Material.Neon)
+	vCylinder(model, "LegFR", 1.4, 0.5, Color3.fromRGB(255, 214, 64), CFrame.new(0.8, 0.7, 1.4), Enum.Material.Neon)
+	vCylinder(model, "LegBL", 1.4, 0.5, Color3.fromRGB(255, 214, 64), CFrame.new(-0.8, 0.7, -1.4), Enum.Material.Neon)
+	vCylinder(model, "LegBR", 1.4, 0.5, Color3.fromRGB(255, 214, 64), CFrame.new(0.8, 0.7, -1.4), Enum.Material.Neon)
+	block(model, "Mane", Vector3.new(0.8, 1.6, 2.4), Color3.fromRGB(255, 248, 232), CFrame.new(0, 4.0, 0.6))
 	addFace(model, CFrame.new(0, 3.4, 2.6), 0.35, 0.25, -0.35, false)
 	return body
 end
 
--- 10. Moka Mammut — Legendary — silver octagonal torso, white tusks, steam.
+-- 10. Moka Mammut — Legendary — polished silver torso, ivory tusks, glowing gold eyes, steam.
 local function buildMoka(model)
-	local torso = vCylinder(model, "Torso", 3.0, 3.6, Color3.fromRGB(190, 195, 205), CFrame.new(0, 2.2, 0), Enum.Material.Metal)
-	ball(model, "Head", Vector3.new(2.2, 2.2, 2.2), Color3.fromRGB(200, 205, 215), CFrame.new(0, 4.2, 0.6))
-	wedge(model, "TuskLeft", Vector3.new(0.4, 2.2, 0.4), Color3.fromRGB(250, 250, 245), CFrame.new(-1.0, 3.6, 1.8) * CFrame.Angles(math.rad(-35), 0, math.rad(15)))
-	wedge(model, "TuskRight", Vector3.new(0.4, 2.2, 0.4), Color3.fromRGB(250, 250, 245), CFrame.new(1.0, 3.6, 1.8) * CFrame.Angles(math.rad(-35), 0, math.rad(-15)))
-	hCylinder(model, "Trunk", 2.0, 0.7, Color3.fromRGB(190, 195, 205), CFrame.new(0, 3.8, 2.0) * CFrame.Angles(math.rad(50), 0, 0), Enum.Material.Metal)
+	local torso = vCylinder(model, "Torso", 3.0, 3.6, Color3.fromRGB(206, 214, 226), CFrame.new(0, 2.2, 0), Enum.Material.Metal)
+	ball(model, "Head", Vector3.new(2.2, 2.2, 2.2), Color3.fromRGB(216, 222, 234), CFrame.new(0, 4.2, 0.6))
+	wedge(model, "TuskLeft", Vector3.new(0.4, 2.2, 0.4), Color3.fromRGB(255, 250, 238), CFrame.new(-1.0, 3.6, 1.8) * CFrame.Angles(math.rad(-35), 0, math.rad(15)))
+	wedge(model, "TuskRight", Vector3.new(0.4, 2.2, 0.4), Color3.fromRGB(255, 250, 238), CFrame.new(1.0, 3.6, 1.8) * CFrame.Angles(math.rad(-35), 0, math.rad(-15)))
+	hCylinder(model, "Trunk", 2.0, 0.7, Color3.fromRGB(206, 214, 226), CFrame.new(0, 3.8, 2.0) * CFrame.Angles(math.rad(50), 0, 0), Enum.Material.Metal)
 	local steam = Instance.new("ParticleEmitter")
 	steam.Name = "Steam"
-	steam.Color = ColorSequence.new(Color3.fromRGB(240, 240, 240))
+	steam.Color = ColorSequence.new(Color3.fromRGB(250, 246, 240))
 	steam.Size = NumberSequence.new(0.8)
 	steam.Rate = 12
 	steam.Lifetime = NumberRange.new(0.8, 1.4)
 	steam.Speed = NumberRange.new(2, 3)
 	steam.SpreadAngle = Vector2.new(20, 20)
 	steam.Parent = torso
-	ball(model, "EyeLeft", Vector3.new(0.45, 0.45, 0.45), Color3.fromRGB(20, 20, 20), CFrame.new(-0.5, 4.5, 1.65))
-	ball(model, "EyeRight", Vector3.new(0.45, 0.45, 0.45), Color3.fromRGB(20, 20, 20), CFrame.new(0.5, 4.5, 1.65))
+	ball(model, "EyeLeft", Vector3.new(0.45, 0.45, 0.45), Color3.fromRGB(255, 214, 68), CFrame.new(-0.5, 4.5, 1.65), Enum.Material.Neon)
+	ball(model, "EyeRight", Vector3.new(0.45, 0.45, 0.45), Color3.fromRGB(255, 214, 68), CFrame.new(0.5, 4.5, 1.65), Enum.Material.Neon)
 	return torso
 end
 
--- 11. Tiramisu Tirannosauro — Mythic — tiered blocks, cocoa head, fork in tiny arms.
+-- 11. Tiramisu Tirannosauro — Mythic — mascarpone & cocoa tiers, glowing rose-gold eyes.
 local function buildTiramisu(model)
-	block(model, "TierBottom", Vector3.new(4.0, 1.2, 3.0), Color3.fromRGB(200, 160, 110), CFrame.new(0, 0.6, 0))
-	block(model, "TierMiddle", Vector3.new(3.2, 1.2, 2.4), Color3.fromRGB(120, 75, 40), CFrame.new(0, 1.8, 0))
-	block(model, "TierTop", Vector3.new(2.4, 1.2, 1.8), Color3.fromRGB(200, 160, 110), CFrame.new(0, 3.0, 0))
-	local head = ball(model, "Head", Vector3.new(2.0, 1.8, 2.0), Color3.fromRGB(90, 55, 30), CFrame.new(0, 4.4, 0.4))
-	block(model, "Jaw", Vector3.new(1.6, 0.5, 1.4), Color3.fromRGB(200, 160, 110), CFrame.new(0, 3.7, 1.2))
+	block(model, "TierBottom", Vector3.new(4.0, 1.2, 3.0), Color3.fromRGB(238, 206, 154), CFrame.new(0, 0.6, 0))
+	block(model, "TierMiddle", Vector3.new(3.2, 1.2, 2.4), Color3.fromRGB(124, 74, 44), CFrame.new(0, 1.8, 0))
+	block(model, "TierTop", Vector3.new(2.4, 1.2, 1.8), Color3.fromRGB(238, 206, 154), CFrame.new(0, 3.0, 0))
+	local head = ball(model, "Head", Vector3.new(2.0, 1.8, 2.0), Color3.fromRGB(98, 56, 34), CFrame.new(0, 4.4, 0.4))
+	block(model, "Jaw", Vector3.new(1.6, 0.5, 1.4), Color3.fromRGB(238, 206, 154), CFrame.new(0, 3.7, 1.2))
 	wedge(model, "Tooth1", Vector3.new(0.3, 0.5, 0.3), Color3.fromRGB(255, 255, 255), CFrame.new(-0.5, 4.0, 1.8))
 	wedge(model, "Tooth2", Vector3.new(0.3, 0.5, 0.3), Color3.fromRGB(255, 255, 255), CFrame.new(0.5, 4.0, 1.8))
-	block(model, "ArmLeft", Vector3.new(0.4, 1.2, 0.4), Color3.fromRGB(200, 160, 110), CFrame.new(-1.4, 2.6, 1.0))
-	block(model, "ArmRight", Vector3.new(0.4, 1.2, 0.4), Color3.fromRGB(200, 160, 110), CFrame.new(1.4, 2.6, 1.0))
-	local fork = block(model, "Fork", Vector3.new(0.15, 1.6, 0.5), Color3.fromRGB(210, 210, 220), CFrame.new(1.4, 3.4, 1.2), Enum.Material.Metal)
+	block(model, "ArmLeft", Vector3.new(0.4, 1.2, 0.4), Color3.fromRGB(238, 206, 154), CFrame.new(-1.4, 2.6, 1.0))
+	block(model, "ArmRight", Vector3.new(0.4, 1.2, 0.4), Color3.fromRGB(238, 206, 154), CFrame.new(1.4, 2.6, 1.0))
+	local fork = block(model, "Fork", Vector3.new(0.15, 1.6, 0.5), Color3.fromRGB(216, 220, 228), CFrame.new(1.4, 3.4, 1.2), Enum.Material.Metal)
 	fork.Name = "Fork"
-	ball(model, "EyeLeft", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(255, 255, 255), CFrame.new(-0.45, 4.7, 1.35))
-	ball(model, "EyeRight", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(255, 255, 255), CFrame.new(0.45, 4.7, 1.35))
+	ball(model, "EyeLeft", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(255, 116, 162), CFrame.new(-0.45, 4.7, 1.35), Enum.Material.Neon)
+	ball(model, "EyeRight", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(255, 116, 162), CFrame.new(0.45, 4.7, 1.35), Enum.Material.Neon)
 	return head
 end
 
 -- 12. Gorgonzola Galassia — Secret — floating neon cheese wheel, orbiting balls.
 local function buildGorgonzola(model)
-	local wheel = wedge(model, "CheeseWheel", Vector3.new(4.4, 1.6, 4.4), Color3.fromRGB(70, 40, 180), CFrame.new(0, 2.6, 0), Enum.Material.Neon)
-	ball(model, "Core", Vector3.new(2.0, 2.0, 2.0), Color3.fromRGB(120, 80, 255), CFrame.new(0, 2.6, 0), Enum.Material.Neon)
-	ball(model, "MoldSpot1", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(60, 255, 120), CFrame.new(1.4, 3.3, 0.8), Enum.Material.Neon)
-	ball(model, "MoldSpot2", Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(60, 255, 120), CFrame.new(-1.2, 3.2, -0.9), Enum.Material.Neon)
+	local wheel = wedge(model, "CheeseWheel", Vector3.new(4.4, 1.6, 4.4), Color3.fromRGB(82, 52, 196), CFrame.new(0, 2.6, 0), Enum.Material.Neon)
+	ball(model, "Core", Vector3.new(2.0, 2.0, 2.0), Color3.fromRGB(136, 92, 255), CFrame.new(0, 2.6, 0), Enum.Material.Neon)
+	ball(model, "MoldSpot1", Vector3.new(0.9, 0.9, 0.9), Color3.fromRGB(84, 252, 138), CFrame.new(1.4, 3.3, 0.8), Enum.Material.Neon)
+	ball(model, "MoldSpot2", Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(84, 252, 138), CFrame.new(-1.2, 3.2, -0.9), Enum.Material.Neon)
 	ball(model, "EyeLeft", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(255, 255, 255), CFrame.new(-0.6, 2.9, 2.2), Enum.Material.Neon)
 	ball(model, "EyeRight", Vector3.new(0.5, 0.5, 0.5), Color3.fromRGB(255, 255, 255), CFrame.new(0.6, 2.9, 2.2), Enum.Material.Neon)
 	local aura = Instance.new("PointLight")
-	aura.Color = Color3.fromRGB(140, 80, 255)
+	aura.Color = Color3.fromRGB(148, 92, 255)
 	aura.Range = 12
-	aura.Brightness = 2
+	aura.Brightness = 1.6
 	aura.Parent = wheel
 	for i = 0, 2 do
-		local orb = ball(model, "OrbitBall" .. i, Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(60, 255, 120), CFrame.new(3, 4.5, 0), Enum.Material.Neon)
+		local orb = ball(model, "OrbitBall" .. i, Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(84, 252, 138), CFrame.new(3, 4.5, 0), Enum.Material.Neon)
 		orb:SetAttribute("IsOrbitStar", true)
 		orb:SetAttribute("OrbitIndex", i)
 	end
@@ -346,71 +344,98 @@ function Roster.formatMoney(amount)
 	end
 end
 
--- Floating tag: name, rarity in its colour, $/s, and a mutation badge.
+-- Clean floating tag: transparent background, white/light text with dark stroke,
+-- ~30% smaller text, MaxDistance fade, three lines + compact mutation pill.
 local function makeNameTag(model, def, mutationId, rate)
 	local primary = model.PrimaryPart
+	local maxTopY = primary.Position.Y + primary.Size.Y * 0.5
+	for _, desc in ipairs(model:GetDescendants()) do
+		if desc:IsA("BasePart") and not desc:GetAttribute("IsOrbitStar") then
+			local halfH = math.abs(desc.CFrame.RightVector.Y) * desc.Size.X * 0.5
+				+ math.abs(desc.CFrame.UpVector.Y) * desc.Size.Y * 0.5
+				+ math.abs(desc.CFrame.LookVector.Y) * desc.Size.Z * 0.5
+			if desc.Position.Y + halfH > maxTopY then
+				maxTopY = desc.Position.Y + halfH
+			end
+		end
+	end
+	local topOffset = (maxTopY - primary.Position.Y) + 1.6
+
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "BrainrotTag"
-	gui.Size = UDim2.fromOffset(260, 110)
-	gui.ExtentsOffsetWorldSpace = Vector3.new(0, 5.2, 0)
+	gui.Size = UDim2.fromOffset(220, mutationId ~= nil and 78 or 56)
+	gui.ExtentsOffsetWorldSpace = Vector3.new(0, 0, 0)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, topOffset, 0)
+	gui.MaxDistance = 120
 	gui.AlwaysOnTop = true
 	gui.LightInfluence = 0
 	gui.Parent = primary
 
+	local strokeColor = Color3.fromRGB(24, 20, 18)
+
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "NameLabel"
-	nameLabel.Size = UDim2.new(1, 0, 0.36, 0)
-	nameLabel.Position = UDim2.new(0, 0, 0, 0)
+	nameLabel.Size = UDim2.new(1, 0, 0, 20)
+	nameLabel.Position = UDim2.fromOffset(0, 0)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = def.Name
 	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	nameLabel.TextSize = 24
-	nameLabel.Font = Enum.Font.GothamBlack
-	nameLabel.TextStrokeTransparency = 0
-	nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	nameLabel.TextSize = 16
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextStrokeTransparency = 0.08
+	nameLabel.TextStrokeColor3 = strokeColor
 	nameLabel.Parent = gui
 
 	local rarityLabel = Instance.new("TextLabel")
 	rarityLabel.Name = "RarityLabel"
-	rarityLabel.Size = UDim2.new(1, 0, 0.3, 0)
-	rarityLabel.Position = UDim2.new(0, 0, 0.36, 0)
+	rarityLabel.Size = UDim2.new(1, 0, 0, 16)
+	rarityLabel.Position = UDim2.fromOffset(0, 20)
 	rarityLabel.BackgroundTransparency = 1
 	rarityLabel.Text = string.upper(def.Rarity)
-	rarityLabel.TextColor3 = Roster.RARITY_COLORS[def.Rarity]
-	rarityLabel.TextSize = 20
-	rarityLabel.Font = Enum.Font.GothamBlack
-	rarityLabel.TextStrokeTransparency = 0
-	rarityLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	rarityLabel.TextColor3 = Roster.RARITY_COLORS[def.Rarity]:Lerp(Color3.fromRGB(255, 255, 255), 0.45)
+	rarityLabel.TextSize = 13
+	rarityLabel.Font = Enum.Font.GothamBold
+	rarityLabel.TextStrokeTransparency = 0.08
+	rarityLabel.TextStrokeColor3 = strokeColor
 	rarityLabel.Parent = gui
 
 	local rateLabel = Instance.new("TextLabel")
 	rateLabel.Name = "RateLabel"
-	rateLabel.Size = UDim2.new(1, 0, 0.3, 0)
-	rateLabel.Position = UDim2.new(0, 0, 0.66, 0)
+	rateLabel.Size = UDim2.new(1, 0, 0, 18)
+	rateLabel.Position = UDim2.fromOffset(0, 36)
 	rateLabel.BackgroundTransparency = 1
 	rateLabel.Text = Roster.formatMoney(rate) .. "/s"
-	rateLabel.TextColor3 = Color3.fromRGB(255, 220, 60)
-	rateLabel.TextSize = 22
-	rateLabel.Font = Enum.Font.GothamBlack
-	rateLabel.TextStrokeTransparency = 0
-	rateLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	rateLabel.TextColor3 = Color3.fromRGB(255, 250, 232)
+	rateLabel.TextSize = 15
+	rateLabel.Font = Enum.Font.GothamBold
+	rateLabel.TextStrokeTransparency = 0.08
+	rateLabel.TextStrokeColor3 = strokeColor
 	rateLabel.Parent = gui
 
 	if mutationId ~= nil then
 		local mut = Roster.MUTATIONS[mutationId]
 		local badge = Instance.new("TextLabel")
 		badge.Name = "MutationBadge"
-		badge.Size = UDim2.new(1, 0, 0.28, 0)
-		badge.Position = UDim2.new(0, 0, 0.94, 0)
+		badge.AnchorPoint = Vector2.new(0.5, 0)
+		badge.Size = UDim2.fromOffset(0, 18)
+		badge.AutomaticSize = Enum.AutomaticSize.X
+		badge.Position = UDim2.new(0.5, 0, 0, 57)
 		badge.BackgroundTransparency = 0.3
-		badge.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		badge.BackgroundColor3 = Color3.fromRGB(30, 24, 22)
 		badge.Text = string.upper(mut.Name) .. " " .. mut.Multiplier .. "x"
-		badge.TextColor3 = mut.Color
-		badge.TextSize = 16
-		badge.Font = Enum.Font.GothamBlack
-		badge.TextStrokeTransparency = 0
-		badge.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		badge.TextColor3 = mut.Color:Lerp(Color3.fromRGB(255, 255, 255), 0.25)
+		badge.TextSize = 11
+		badge.Font = Enum.Font.GothamBold
+		badge.TextStrokeTransparency = 0.12
+		badge.TextStrokeColor3 = strokeColor
 		badge.Parent = gui
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = badge
+		local pad = Instance.new("UIPadding")
+		pad.PaddingLeft = UDim.new(0, 8)
+		pad.PaddingRight = UDim.new(0, 8)
+		pad.Parent = badge
 	end
 end
 
@@ -462,10 +487,10 @@ function Roster.applyMutation(model, mutationId)
 		end
 		ball(model, "VoidCore", Vector3.new(1.6, 1.6, 1.6), Color3.fromRGB(160, 60, 255), CFrame.new(0, 2.4, 0), Enum.Material.Neon)
 		local attachTop = Instance.new("Attachment")
-		attachTop.Position = Vector3.new(0, 1.5, 0)
+		attachTop.Position = Vector3.new(0, 1.5 * CREATURE_SCALE, 0)
 		attachTop.Parent = model.PrimaryPart
 		local attachBottom = Instance.new("Attachment")
-		attachBottom.Position = Vector3.new(0, -1.5, 0)
+		attachBottom.Position = Vector3.new(0, -1.5 * CREATURE_SCALE, 0)
 		attachBottom.Parent = model.PrimaryPart
 		local trail = Instance.new("Trail")
 		trail.Color = ColorSequence.new(Color3.fromRGB(255, 60, 220))
@@ -509,9 +534,9 @@ function Roster.animateModel(model, t)
 	for _, entry in ipairs(entries) do
 		if entry.Kind == "orbit" then
 			local angle = t * 1.5 + entry.Index * 2.094
-			entry.Part.CFrame = pivot * CFrame.new(math.cos(angle) * 3.2, 2.2, math.sin(angle) * 3.2)
+			entry.Part.CFrame = pivot * CFrame.new(math.cos(angle) * 3.2 * CREATURE_SCALE, 2.2 * CREATURE_SCALE, math.sin(angle) * 3.2 * CREATURE_SCALE)
 		elseif entry.Kind == "layer" then
-			entry.Part.CFrame = pivot * entry.Offset * CFrame.new(0, math.sin(t * 3 + entry.Index * 0.9) * 0.18, 0)
+			entry.Part.CFrame = pivot * entry.Offset * CFrame.new(0, math.sin(t * 3 + entry.Index * 0.9) * 0.18 * CREATURE_SCALE, 0)
 		end
 	end
 end

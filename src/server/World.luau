@@ -1,8 +1,8 @@
 -- World.luau — builds the whole 3D island from primitives at server start:
--- turquoise checkerboard island, the central conveyor with hazard stripes, eight
+-- warm sand/cream two-tone plaza island, the central conveyor, eight pastel
 -- colour-coded player bases with pedestals, collect pads and laser gates, the
--- golden Rebirth Shrine, spawn points and decorations (palms, rainbow arch,
--- lamp posts, floating signs). Also sets the bright midday lighting.
+-- golden Rebirth Shrine, spawn points and decorations (palms, pastel arches,
+-- lamp posts, floating signs). Also sets the warm midday lighting.
 -- Returns a table of handles the other systems use.
 
 local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
@@ -21,7 +21,7 @@ local function newPart(parent, name, size, color, cf, material, anchored)
 	p.Size = size
 	p.Color = color
 	p.CFrame = cf
-	p.Material = material or Enum.Material.Plastic
+	p.Material = material or Enum.Material.SmoothPlastic
 	p.Anchored = anchored ~= false
 	p.CanCollide = true
 	p.Parent = parent
@@ -29,7 +29,7 @@ local function newPart(parent, name, size, color, cf, material, anchored)
 end
 
 local function makeSign(parent, name, size, cf, text, textSize, textColor)
-	local signPart = newPart(parent, name, size, Color3.fromRGB(40, 40, 55), cf, Enum.Material.SmoothPlastic)
+	local signPart = newPart(parent, name, size, Color3.fromRGB(82, 58, 46), cf, Enum.Material.SmoothPlastic)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
 	gui.AlwaysOnTop = true
@@ -38,20 +38,22 @@ local function makeSign(parent, name, size, cf, text, textSize, textColor)
 	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundTransparency = 1
 	label.Text = text
-	label.TextColor3 = textColor or Color3.fromRGB(255, 255, 255)
+	label.TextColor3 = textColor or Color3.fromRGB(255, 248, 236)
 	label.TextSize = textSize or 48
 	label.Font = Enum.Font.GothamBlack
 	label.TextScaled = true
+	label.TextStrokeTransparency = 0.25
+	label.TextStrokeColor3 = Color3.fromRGB(32, 20, 14)
 	label.Parent = gui
 	return signPart, label
 end
 
 local function buildIsland(workspaceFolder)
-	-- Checkerboard: two turquoise shades, 11-stud tiles across the 220-stud island.
+	-- Warm sand/cream two-tone plaza tiles: 11-stud tiles across the 220-stud island.
 	local tileSize = 11
 	local half = Config.ISLAND_SIZE / 2
-	local colorA = Color3.fromRGB(64, 224, 208)
-	local colorB = Color3.fromRGB(40, 190, 185)
+	local colorA = Color3.fromRGB(238, 224, 198)
+	local colorB = Color3.fromRGB(220, 203, 174)
 	local row = 0
 	for x = -half, half - tileSize, tileSize do
 		row += 1
@@ -62,24 +64,30 @@ local function buildIsland(workspaceFolder)
 			if (row + col) % 2 == 0 then
 				color = colorB
 			end
-			newPart(workspaceFolder, "IslandTile", Vector3.new(tileSize, 1, tileSize), color, CFrame.new(x + tileSize / 2, -0.5, z + tileSize / 2), Enum.Material.Plastic)
+			newPart(workspaceFolder, "IslandTile", Vector3.new(tileSize, 1, tileSize), color, CFrame.new(x + tileSize / 2, -0.5, z + tileSize / 2), Enum.Material.SmoothPlastic)
 		end
 	end
-	-- Deep water skirt below the island edge.
-	newPart(workspaceFolder, "Water", Vector3.new(400, 1, 400), Color3.fromRGB(20, 110, 190), CFrame.new(0, -2.5, 0), Enum.Material.SmoothPlastic)
+	-- Warm terracotta-stone edge trim framing the plaza terrace.
+	local curbColor = Color3.fromRGB(196, 158, 126)
+	newPart(workspaceFolder, "IslandCurbNorth", Vector3.new(Config.ISLAND_SIZE + 4, 1.4, 2), curbColor, CFrame.new(0, -0.3, -half - 1), Enum.Material.SmoothPlastic)
+	newPart(workspaceFolder, "IslandCurbSouth", Vector3.new(Config.ISLAND_SIZE + 4, 1.4, 2), curbColor, CFrame.new(0, -0.3, half + 1), Enum.Material.SmoothPlastic)
+	newPart(workspaceFolder, "IslandCurbWest", Vector3.new(2, 1.4, Config.ISLAND_SIZE), curbColor, CFrame.new(-half - 1, -0.3, 0), Enum.Material.SmoothPlastic)
+	newPart(workspaceFolder, "IslandCurbEast", Vector3.new(2, 1.4, Config.ISLAND_SIZE), curbColor, CFrame.new(half + 1, -0.3, 0), Enum.Material.SmoothPlastic)
+	-- Calm coastal-blue water skirt below the island edge.
+	newPart(workspaceFolder, "Water", Vector3.new(520, 1, 520), Color3.fromRGB(92, 166, 214), CFrame.new(0, -2.5, 0), Enum.Material.SmoothPlastic)
 end
 
 local function buildConveyor(workspaceFolder)
-	local belt = newPart(workspaceFolder, "ConveyorBelt", Vector3.new(12, 2, 182), Color3.fromRGB(60, 60, 70), CFrame.new(0, 1, 0), Enum.Material.SmoothPlastic)
+	local belt = newPart(workspaceFolder, "ConveyorBelt", Vector3.new(12, 2, 182), Color3.fromRGB(92, 78, 68), CFrame.new(0, 1, 0), Enum.Material.SmoothPlastic)
 	belt.CanCollide = true
-	-- Neon-yellow hazard stripes along both edges.
+	-- Warm saffron-brass trim stripes along both edges.
 	for z = -88, 88, 6 do
-		newPart(workspaceFolder, "HazardStripeL", Vector3.new(1.2, 0.2, 3), Color3.fromRGB(255, 235, 0), CFrame.new(-5.4, 2.05, z), Enum.Material.Neon)
-		newPart(workspaceFolder, "HazardStripeR", Vector3.new(1.2, 0.2, 3), Color3.fromRGB(255, 235, 0), CFrame.new(5.4, 2.05, z), Enum.Material.Neon)
+		newPart(workspaceFolder, "HazardStripeL", Vector3.new(1.2, 0.2, 3), Color3.fromRGB(236, 196, 104), CFrame.new(-5.4, 2.05, z), Enum.Material.SmoothPlastic)
+		newPart(workspaceFolder, "HazardStripeR", Vector3.new(1.2, 0.2, 3), Color3.fromRGB(236, 196, 104), CFrame.new(5.4, 2.05, z), Enum.Material.SmoothPlastic)
 	end
 	-- End walls so the belt reads as a machine, not a road.
-	newPart(workspaceFolder, "ConveyorEndNorth", Vector3.new(14, 4, 1), Color3.fromRGB(45, 45, 55), CFrame.new(0, 2, -91), Enum.Material.SmoothPlastic)
-	newPart(workspaceFolder, "ConveyorEndSouth", Vector3.new(14, 4, 1), Color3.fromRGB(45, 45, 55), CFrame.new(0, 2, 91), Enum.Material.SmoothPlastic)
+	newPart(workspaceFolder, "ConveyorEndNorth", Vector3.new(14, 4, 1), Color3.fromRGB(138, 98, 76), CFrame.new(0, 2, -91), Enum.Material.SmoothPlastic)
+	newPart(workspaceFolder, "ConveyorEndSouth", Vector3.new(14, 4, 1), Color3.fromRGB(138, 98, 76), CFrame.new(0, 2, 91), Enum.Material.SmoothPlastic)
 	World.Conveyor = belt
 end
 
@@ -93,23 +101,24 @@ local function buildBase(workspaceFolder, index, center)
 	folder.Name = "Base" .. index
 	folder.Parent = workspaceFolder
 	local color = Config.BASE_COLORS[index]
+	local plotColor = Color3.fromRGB(246, 239, 226):Lerp(color, 0.38)
 	local side = 1
 	if center.X < 0 then
 		side = -1
 	end
-	-- Plot floor.
-	newPart(folder, "PlotFloor", Vector3.new(Config.BASE_PLOT_SIZE, 1, Config.BASE_PLOT_SIZE), Color3.fromRGB(245, 245, 240), CFrame.new(center.X, 0.5, center.Z), Enum.Material.SmoothPlastic)
-	-- Neon border walls (low, so players step over them; the gate is the door).
+	-- Pastel-tinted plot floor.
+	newPart(folder, "PlotFloor", Vector3.new(Config.BASE_PLOT_SIZE, 1, Config.BASE_PLOT_SIZE), plotColor, CFrame.new(center.X, 0.5, center.Z), Enum.Material.SmoothPlastic)
+	-- Coordinated border curbs (low, so players step over them; the gate is the door).
 	local halfPlot = Config.BASE_PLOT_SIZE / 2
-	newPart(folder, "BorderNorth", Vector3.new(Config.BASE_PLOT_SIZE, 1.5, 1), color, CFrame.new(center.X, 0.75, center.Z - halfPlot), Enum.Material.Neon)
-	newPart(folder, "BorderSouth", Vector3.new(Config.BASE_PLOT_SIZE, 1.5, 1), color, CFrame.new(center.X, 0.75, center.Z + halfPlot), Enum.Material.Neon)
-	newPart(folder, "BorderOuter", Vector3.new(1, 1.5, Config.BASE_PLOT_SIZE), color, CFrame.new(center.X + side * halfPlot, 0.75, center.Z), Enum.Material.Neon)
+	newPart(folder, "BorderNorth", Vector3.new(Config.BASE_PLOT_SIZE, 1.5, 1), color, CFrame.new(center.X, 0.75, center.Z - halfPlot), Enum.Material.SmoothPlastic)
+	newPart(folder, "BorderSouth", Vector3.new(Config.BASE_PLOT_SIZE, 1.5, 1), color, CFrame.new(center.X, 0.75, center.Z + halfPlot), Enum.Material.SmoothPlastic)
+	newPart(folder, "BorderOuter", Vector3.new(1, 1.5, Config.BASE_PLOT_SIZE), color, CFrame.new(center.X + side * halfPlot, 0.75, center.Z), Enum.Material.SmoothPlastic)
 	-- Inner edge: two short walls leaving an 8-stud gate opening at local Z 0.
-	newPart(folder, "BorderInnerA", Vector3.new(1, 1.5, 16), color, CFrame.new(center.X - side * halfPlot, 0.75, center.Z - 12), Enum.Material.Neon)
-	newPart(folder, "BorderInnerB", Vector3.new(1, 1.5, 16), color, CFrame.new(center.X - side * halfPlot, 0.75, center.Z + 12), Enum.Material.Neon)
+	newPart(folder, "BorderInnerA", Vector3.new(1, 1.5, 16), color, CFrame.new(center.X - side * halfPlot, 0.75, center.Z - 12), Enum.Material.SmoothPlastic)
+	newPart(folder, "BorderInnerB", Vector3.new(1, 1.5, 16), color, CFrame.new(center.X - side * halfPlot, 0.75, center.Z + 12), Enum.Material.SmoothPlastic)
 
 	local base = { Center = center, Side = side, Pedestals = {} }
-	-- 12 glowing pedestals.
+	-- 12 pedestals with glowing colour-coded rings.
 	local slot = 0
 	for _, rowZ in ipairs(PEDESTAL_ROWS) do
 		for _, colX in ipairs(PEDESTAL_COLS) do
@@ -121,7 +130,7 @@ local function buildBase(workspaceFolder, index, center)
 			pedestal.Shape = Enum.PartType.Cylinder
 			pedestal.Size = Vector3.new(1.5, 3.6, 3.6)
 			pedestal.CFrame = CFrame.new(px, 0.75, pz) * CFrame.Angles(0, 0, math.rad(90))
-			pedestal.Color = Color3.fromRGB(230, 230, 240)
+			pedestal.Color = Color3.fromRGB(244, 236, 222)
 			pedestal.Material = Enum.Material.SmoothPlastic
 			pedestal.Anchored = true
 			pedestal.CanCollide = true
@@ -142,35 +151,34 @@ local function buildBase(workspaceFolder, index, center)
 		end
 	end
 	-- Collect pad in the far corner.
-	local collectPad = newPart(folder, "CollectPad", Vector3.new(6, 1, 6), Color3.fromRGB(255, 215, 0), CFrame.new(center.X + side * 15, 0.5, center.Z + 15), Enum.Material.Neon)
+	local collectPad = newPart(folder, "CollectPad", Vector3.new(6, 1, 6), Color3.fromRGB(244, 200, 68), CFrame.new(center.X + side * 15, 0.5, center.Z + 15), Enum.Material.Foil)
 	collectPad:SetAttribute("BaseIndex", index)
 	base.CollectPad = collectPad
-	makeSign(folder, "CollectSign", Vector3.new(6, 2.5, 0.5), CFrame.new(center.X + side * 15, 4.5, center.Z + 15) * CFrame.Angles(0, math.rad(180), 0), "COLLECT $$", 32, Color3.fromRGB(255, 215, 0))
+	makeSign(folder, "CollectSign", Vector3.new(6, 2.5, 0.5), CFrame.new(center.X + side * 15, 4.5, center.Z + 15) * CFrame.Angles(0, math.rad(180), 0), "COLLECT $$", 32, Color3.fromRGB(255, 224, 115))
 
-	-- Laser gate: two posts, a top beam, and the laser wall itself (hidden until locked).
+	-- Laser gate: two warm stone posts, a top beam, and the laser wall itself (hidden until locked).
 	local gateX = center.X - side * halfPlot
-	local postA = newPart(folder, "GatePostA", Vector3.new(1, 7, 1), Color3.fromRGB(200, 200, 210), CFrame.new(gateX, 3.5, center.Z - 4.5), Enum.Material.Metal)
-	newPart(folder, "GatePostB", Vector3.new(1, 7, 1), Color3.fromRGB(200, 200, 210), CFrame.new(gateX, 3.5, center.Z + 4.5), Enum.Material.Metal)
-	newPart(folder, "GateBeam", Vector3.new(1, 1, 10), Color3.fromRGB(200, 200, 210), CFrame.new(gateX, 7.5, center.Z), Enum.Material.Metal)
-	local laser = newPart(folder, "GateLaser", Vector3.new(0.5, 6, 8), Color3.fromRGB(255, 40, 40), CFrame.new(gateX, 3.5, center.Z), Enum.Material.Neon)
-	laser.Transparency = 0.35
+	local postA = newPart(folder, "GatePostA", Vector3.new(1, 7, 1), Color3.fromRGB(218, 204, 184), CFrame.new(gateX, 3.5, center.Z - 4.5), Enum.Material.SmoothPlastic)
+	newPart(folder, "GatePostB", Vector3.new(1, 7, 1), Color3.fromRGB(218, 204, 184), CFrame.new(gateX, 3.5, center.Z + 4.5), Enum.Material.SmoothPlastic)
+	newPart(folder, "GateBeam", Vector3.new(1, 1, 10), Color3.fromRGB(218, 204, 184), CFrame.new(gateX, 7.5, center.Z), Enum.Material.SmoothPlastic)
+	local laser = newPart(folder, "GateLaser", Vector3.new(0.5, 6, 8), Color3.fromRGB(240, 75, 75), CFrame.new(gateX, 3.5, center.Z), Enum.Material.Neon)
 	laser.CanCollide = false
 	laser.Transparency = 1
 	base.Gate = postA
 	base.GateLaser = laser
 	-- Gate countdown sign above the beam.
-	local _, gateLabel = makeSign(folder, "GateSign", Vector3.new(9, 3, 0.5), CFrame.new(gateX - side * 1, 9.5, center.Z), "UNLOCKED", 40, Color3.fromRGB(120, 255, 120))
+	local _, gateLabel = makeSign(folder, "GateSign", Vector3.new(9, 3, 0.5), CFrame.new(gateX - side * 1, 9.5, center.Z), "UNLOCKED", 40, Color3.fromRGB(152, 238, 162))
 	base.GateSignLabel = gateLabel
 	-- Big Lock button beside the gate.
-	local lockButton = newPart(folder, "LockButton", Vector3.new(2.5, 2.5, 2.5), Color3.fromRGB(255, 60, 60), CFrame.new(gateX - side * 2, 1.25, center.Z + 7.5), Enum.Material.Neon)
+	local lockButton = newPart(folder, "LockButton", Vector3.new(2.5, 2.5, 2.5), Color3.fromRGB(228, 78, 72), CFrame.new(gateX - side * 2, 1.25, center.Z + 7.5), Enum.Material.SmoothPlastic)
 	lockButton:SetAttribute("BaseIndex", index)
 	local click = Instance.new("ClickDetector")
 	click.MaxActivationDistance = 14
 	click.Parent = lockButton
 	base.LockButton = lockButton
-	makeSign(folder, "LockLabel", Vector3.new(3, 1.5, 0.5), CFrame.new(gateX - side * 2, 3.2, center.Z + 7.5), "LOCK", 32, Color3.fromRGB(255, 255, 255))
+	makeSign(folder, "LockLabel", Vector3.new(3, 1.5, 0.5), CFrame.new(gateX - side * 2, 3.2, center.Z + 7.5), "LOCK", 32, Color3.fromRGB(255, 248, 236))
 	-- Floating owner sign above the gate.
-	local _, ownerLabel = makeSign(folder, "OwnerSign", Vector3.new(14, 3, 0.5), CFrame.new(gateX - side * 1, 12.5, center.Z), "EMPTY BASE", 40, Color3.fromRGB(255, 255, 255))
+	local _, ownerLabel = makeSign(folder, "OwnerSign", Vector3.new(14, 3, 0.5), CFrame.new(gateX - side * 1, 12.5, center.Z), "EMPTY BASE", 40, Color3.fromRGB(255, 248, 236))
 	base.OwnerLabel = ownerLabel
 	World.Bases[index] = base
 end
@@ -184,11 +192,11 @@ local function buildShrine(workspaceFolder)
 	platform.Shape = Enum.PartType.Cylinder
 	platform.Size = Vector3.new(2, 18, 18)
 	platform.CFrame = CFrame.new(0, 1, 102) * CFrame.Angles(0, 0, math.rad(90))
-	platform.Color = Color3.fromRGB(255, 215, 0)
+	platform.Color = Color3.fromRGB(244, 202, 72)
 	platform.Material = Enum.Material.Foil
 	platform.Anchored = true
 	platform.Parent = folder
-	-- Glowing ring of gold orbs around the platform.
+	-- Glowing ring of warm gold orbs around the platform.
 	for i = 0, 11 do
 		local angle = i * math.rad(30)
 		local orb = Instance.new("Part")
@@ -196,13 +204,13 @@ local function buildShrine(workspaceFolder)
 		orb.Shape = Enum.PartType.Ball
 		orb.Size = Vector3.new(1.2, 1.2, 1.2)
 		orb.CFrame = CFrame.new(math.cos(angle) * 11, 1.5, 102 + math.sin(angle) * 11)
-		orb.Color = Color3.fromRGB(255, 220, 80)
+		orb.Color = Color3.fromRGB(255, 226, 120)
 		orb.Material = Enum.Material.Neon
 		orb.Anchored = true
 		orb.CanCollide = false
 		orb.Parent = folder
 	end
-	local pillar = newPart(folder, "ShrinePillar", Vector3.new(3, 8, 3), Color3.fromRGB(255, 240, 180), CFrame.new(0, 4, 102), Enum.Material.Foil)
+	local pillar = newPart(folder, "ShrinePillar", Vector3.new(3, 8, 3), Color3.fromRGB(250, 234, 182), CFrame.new(0, 4, 102), Enum.Material.Foil)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Rebirth"
 	prompt.ObjectText = "Rebirth Shrine"
@@ -210,7 +218,7 @@ local function buildShrine(workspaceFolder)
 	prompt.MaxActivationDistance = 12
 	prompt.Parent = pillar
 	World.ShrinePrompt = prompt
-	makeSign(folder, "ShrineSign", Vector3.new(20, 5, 0.5), CFrame.new(0, 11, 102), "REBIRTH SHRINE", 44, Color3.fromRGB(255, 215, 0))
+	makeSign(folder, "ShrineSign", Vector3.new(20, 5, 0.5), CFrame.new(0, 11, 102), "REBIRTH SHRINE", 44, Color3.fromRGB(255, 226, 120))
 	World.Shrine = folder
 end
 
@@ -218,12 +226,15 @@ local function buildDecorations(workspaceFolder)
 	local folder = Instance.new("Folder")
 	folder.Name = "Decorations"
 	folder.Parent = workspaceFolder
-	-- Palm trees flanking the island.
+	-- Palm trees flanking the island and plaza edges.
 	local palmSpots = {
 		Vector3.new(-70, 0, -80), Vector3.new(70, 0, -80),
 		Vector3.new(-70, 0, 80), Vector3.new(70, 0, 80),
 		Vector3.new(-95, 0, -20), Vector3.new(95, 0, -20),
 		Vector3.new(-95, 0, 20), Vector3.new(95, 0, 20),
+		Vector3.new(-88, 0, -58), Vector3.new(88, 0, -58),
+		Vector3.new(-88, 0, 58), Vector3.new(88, 0, 58),
+		Vector3.new(-36, 0, 98), Vector3.new(36, 0, 98),
 	}
 	for i, spot in ipairs(palmSpots) do
 		local trunk = Instance.new("Part")
@@ -231,7 +242,7 @@ local function buildDecorations(workspaceFolder)
 		trunk.Shape = Enum.PartType.Cylinder
 		trunk.Size = Vector3.new(9, 1.4, 1.4)
 		trunk.CFrame = CFrame.new(spot.X, 4.5, spot.Z) * CFrame.Angles(0, 0, math.rad(90))
-		trunk.Color = Color3.fromRGB(140, 95, 50)
+		trunk.Color = Color3.fromRGB(158, 112, 70)
 		trunk.Material = Enum.Material.Wood
 		trunk.Anchored = true
 		trunk.Parent = folder
@@ -242,7 +253,7 @@ local function buildDecorations(workspaceFolder)
 			leafPart.Shape = Enum.PartType.Wedge
 			leafPart.Size = Vector3.new(0.5, 1.2, 4.5)
 			leafPart.CFrame = CFrame.new(spot.X + math.cos(angle) * 2.2, 9.2, spot.Z + math.sin(angle) * 2.2) * CFrame.Angles(math.rad(-25), -angle, 0)
-			leafPart.Color = Color3.fromRGB(60, 200, 80)
+			leafPart.Color = Color3.fromRGB(98, 186, 98)
 			leafPart.Material = Enum.Material.SmoothPlastic
 			leafPart.Anchored = true
 			leafPart.Parent = folder
@@ -252,15 +263,15 @@ local function buildDecorations(workspaceFolder)
 		coconut.Shape = Enum.PartType.Ball
 		coconut.Size = Vector3.new(1, 1, 1)
 		coconut.CFrame = CFrame.new(spot.X + 0.8, 8.6, spot.Z)
-		coconut.Color = Color3.fromRGB(110, 70, 30)
+		coconut.Color = Color3.fromRGB(122, 82, 46)
 		coconut.Material = Enum.Material.SmoothPlastic
 		coconut.Anchored = true
 		coconut.Parent = folder
 	end
-	-- Rainbow arch over the conveyor's north start.
+	-- Pastel Italian festival arch over the conveyor's north start.
 	local archColors = {
-		Color3.fromRGB(255, 60, 60), Color3.fromRGB(255, 150, 40), Color3.fromRGB(255, 235, 0),
-		Color3.fromRGB(80, 220, 90), Color3.fromRGB(80, 160, 255), Color3.fromRGB(150, 80, 255),
+		Color3.fromRGB(238, 140, 126), Color3.fromRGB(246, 184, 136), Color3.fromRGB(250, 226, 150),
+		Color3.fromRGB(162, 216, 166), Color3.fromRGB(154, 200, 238), Color3.fromRGB(204, 170, 230),
 	}
 	for band = 0, 5 do
 		for step = 0, 10 do
@@ -273,13 +284,13 @@ local function buildDecorations(workspaceFolder)
 			seg.Size = Vector3.new(1.2, 1.2, 1.2)
 			seg.CFrame = CFrame.new(x, y, -90) * CFrame.Angles(0, 0, -t)
 			seg.Color = archColors[band + 1]
-			seg.Material = Enum.Material.Neon
+			seg.Material = Enum.Material.SmoothPlastic
 			seg.Anchored = true
 			seg.CanCollide = false
 			seg.Parent = folder
 		end
 	end
-	-- Second rainbow arch over the shrine approach at the south end.
+	-- Matching pastel arch over the shrine approach at the south end.
 	for band = 0, 5 do
 		for step = 0, 10 do
 			local t = step / 10 * math.pi
@@ -291,54 +302,64 @@ local function buildDecorations(workspaceFolder)
 			seg.Size = Vector3.new(1.2, 1.2, 1.2)
 			seg.CFrame = CFrame.new(x, y, 90) * CFrame.Angles(0, 0, -t)
 			seg.Color = archColors[band + 1]
-			seg.Material = Enum.Material.Neon
+			seg.Material = Enum.Material.SmoothPlastic
 			seg.Anchored = true
 			seg.CanCollide = false
 			seg.Parent = folder
 		end
 	end
-	-- Lamp posts along the conveyor.
-	for _, z in ipairs({ -60, -30, 0, 30, 60 }) do
-		for _, x in ipairs({ -9, 9 }) do
-			newPart(folder, "LampPole", Vector3.new(0.6, 7, 0.6), Color3.fromRGB(50, 50, 60), CFrame.new(x, 3.5, z), Enum.Material.Metal)
-			local lamp = Instance.new("Part")
-			lamp.Name = "LampBulb"
-			lamp.Shape = Enum.PartType.Ball
-			lamp.Size = Vector3.new(1.4, 1.4, 1.4)
-			lamp.CFrame = CFrame.new(x, 7.4, z)
-			lamp.Color = Color3.fromRGB(255, 240, 150)
-			lamp.Material = Enum.Material.Neon
-			lamp.Anchored = true
-			lamp.CanCollide = false
-			lamp.Parent = folder
-			local light = Instance.new("PointLight")
-			light.Color = Color3.fromRGB(255, 240, 150)
-			light.Range = 14
-			light.Brightness = 1.5
-			light.Parent = lamp
-		end
+	-- Warm wrought-iron lamp posts along the conveyor and outer plaza edges.
+	local lampSpots = {
+		Vector3.new(-9, 0, -60), Vector3.new(9, 0, -60),
+		Vector3.new(-9, 0, -30), Vector3.new(9, 0, -30),
+		Vector3.new(-9, 0, 0), Vector3.new(9, 0, 0),
+		Vector3.new(-9, 0, 30), Vector3.new(9, 0, 30),
+		Vector3.new(-9, 0, 60), Vector3.new(9, 0, 60),
+		Vector3.new(-62, 0, -75), Vector3.new(62, 0, -75),
+		Vector3.new(-62, 0, -15), Vector3.new(62, 0, -15),
+		Vector3.new(-62, 0, 15), Vector3.new(62, 0, 15),
+		Vector3.new(-62, 0, 75), Vector3.new(62, 0, 75),
+		Vector3.new(-22, 0, 96), Vector3.new(22, 0, 96),
+	}
+	for _, spot in ipairs(lampSpots) do
+		newPart(folder, "LampPole", Vector3.new(0.6, 7, 0.6), Color3.fromRGB(76, 66, 58), CFrame.new(spot.X, 3.5, spot.Z), Enum.Material.Metal)
+		local lamp = Instance.new("Part")
+		lamp.Name = "LampBulb"
+		lamp.Shape = Enum.PartType.Ball
+		lamp.Size = Vector3.new(1.4, 1.4, 1.4)
+		lamp.CFrame = CFrame.new(spot.X, 7.4, spot.Z)
+		lamp.Color = Color3.fromRGB(255, 236, 178)
+		lamp.Material = Enum.Material.Neon
+		lamp.Anchored = true
+		lamp.CanCollide = false
+		lamp.Parent = folder
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(255, 230, 170)
+		light.Range = 14
+		light.Brightness = 1.1
+		light.Parent = lamp
 	end
 	-- Floating title sign over the island centre.
-	makeSign(folder, "TitleSign", Vector3.new(40, 7, 0.5), CFrame.new(0, 16, -60), "BRAINROT TRATTORIA", 44, Color3.fromRGB(255, 220, 60))
-	-- Food stalls on the outer walkways: counter, striped awning, sign.
+	makeSign(folder, "TitleSign", Vector3.new(34, 5.5, 0.5), CFrame.new(0, 19.5, -56), "BRAINROT TRATTORIA", 42, Color3.fromRGB(255, 232, 142))
+	-- Food stalls on the outer walkways: counter, pastel-striped awning, sign.
 	local stallSpots = {
-		{ Pos = Vector3.new(-65, 0, -40), Color = Color3.fromRGB(255, 80, 80), Sign = "GNOCCHI BAR" },
-		{ Pos = Vector3.new(65, 0, 0), Color = Color3.fromRGB(80, 200, 90), Sign = "LIMONCELLO STAND" },
-		{ Pos = Vector3.new(-65, 0, 40), Color = Color3.fromRGB(255, 200, 40), Sign = "CANNOLI CART" },
+		{ Pos = Vector3.new(-65, 0, -40), Color = Color3.fromRGB(226, 112, 100), Sign = "GNOCCHI BAR" },
+		{ Pos = Vector3.new(65, 0, 0), Color = Color3.fromRGB(118, 192, 126), Sign = "LIMONCELLO STAND" },
+		{ Pos = Vector3.new(-65, 0, 40), Color = Color3.fromRGB(238, 190, 92), Sign = "CANNOLI CART" },
 	}
 	for i, stall in ipairs(stallSpots) do
 		local basePos = stall.Pos
-		newPart(folder, "StallCounter" .. i, Vector3.new(8, 3, 4), Color3.fromRGB(150, 100, 60), CFrame.new(basePos.X, 1.5, basePos.Z), Enum.Material.Wood)
+		newPart(folder, "StallCounter" .. i, Vector3.new(8, 3, 4), Color3.fromRGB(172, 124, 82), CFrame.new(basePos.X, 1.5, basePos.Z), Enum.Material.Wood)
 		for stripe = 0, 3 do
 			local stripeColor = stall.Color
 			if stripe % 2 == 1 then
-				stripeColor = Color3.fromRGB(255, 255, 255)
+				stripeColor = Color3.fromRGB(252, 246, 234)
 			end
 			newPart(folder, "StallAwning" .. i .. "_" .. stripe, Vector3.new(2, 0.4, 5), stripeColor, CFrame.new(basePos.X - 3 + stripe * 2, 5.2, basePos.Z), Enum.Material.SmoothPlastic)
 		end
-		newPart(folder, "StallPoleL" .. i, Vector3.new(0.5, 5, 0.5), Color3.fromRGB(90, 60, 30), CFrame.new(basePos.X - 3.8, 2.5, basePos.Z - 2), Enum.Material.Wood)
-		newPart(folder, "StallPoleR" .. i, Vector3.new(0.5, 5, 0.5), Color3.fromRGB(90, 60, 30), CFrame.new(basePos.X + 3.8, 2.5, basePos.Z - 2), Enum.Material.Wood)
-		makeSign(folder, "StallSign" .. i, Vector3.new(9, 2, 0.5), CFrame.new(basePos.X, 7, basePos.Z), stall.Sign, 28, Color3.fromRGB(255, 255, 255))
+		newPart(folder, "StallPoleL" .. i, Vector3.new(0.5, 5, 0.5), Color3.fromRGB(112, 78, 50), CFrame.new(basePos.X - 3.8, 2.5, basePos.Z - 2), Enum.Material.Wood)
+		newPart(folder, "StallPoleR" .. i, Vector3.new(0.5, 5, 0.5), Color3.fromRGB(112, 78, 50), CFrame.new(basePos.X + 3.8, 2.5, basePos.Z - 2), Enum.Material.Wood)
+		makeSign(folder, "StallSign" .. i, Vector3.new(9, 2, 0.5), CFrame.new(basePos.X, 7, basePos.Z), stall.Sign, 28, Color3.fromRGB(255, 248, 236))
 	end
 	-- Puffy clouds drifting over the island edges.
 	local cloudSpots = {
@@ -352,18 +373,18 @@ local function buildDecorations(workspaceFolder)
 			puff.Shape = Enum.PartType.Ball
 			puff.Size = Vector3.new(7, 4, 5)
 			puff.CFrame = CFrame.new(spot + offset)
-			puff.Color = Color3.fromRGB(255, 255, 255)
+			puff.Color = Color3.fromRGB(255, 252, 246)
 			puff.Material = Enum.Material.SmoothPlastic
-			puff.Transparency = 0.15
+			puff.Transparency = 0.18
 			puff.Anchored = true
 			puff.CanCollide = false
 			puff.Parent = folder
 		end
 	end
 	-- Tsunami source wall at the north end.
-	local wall = newPart(workspaceFolder, "TsunamiWall", Vector3.new(220, 14, 2), Color3.fromRGB(30, 90, 160), CFrame.new(0, 7, -104), Enum.Material.SmoothPlastic)
-	wall.Transparency = 0.25
-	makeSign(workspaceFolder, "TsunamiSign", Vector3.new(30, 5, 0.5), CFrame.new(0, 16, -102), "TSUNAMI COMES FROM HERE", 36, Color3.fromRGB(120, 200, 255))
+	local wall = newPart(workspaceFolder, "TsunamiWall", Vector3.new(220, 14, 2), Color3.fromRGB(88, 158, 210), CFrame.new(0, 7, -104), Enum.Material.SmoothPlastic)
+	wall.Transparency = 0.4
+	makeSign(workspaceFolder, "TsunamiSign", Vector3.new(30, 5, 0.5), CFrame.new(0, 16, -102), "TSUNAMI COMES FROM HERE", 36, Color3.fromRGB(205, 236, 255))
 end
 
 function World.buildWorld()
@@ -372,12 +393,12 @@ function World.buildWorld()
 	folder.Name = "BrainrotWorld"
 	folder.Parent = workspaceService
 
-	-- Bright midday light, saturated, no fog washout.
+	-- Gentle warm midday light, sunny plaza feel, no fog changes.
 	local lighting = game:GetService("Lighting")
 	lighting.ClockTime = 14
 	lighting.Brightness = 2
-	lighting.Ambient = Color3.fromRGB(180, 180, 180)
-	lighting.OutdoorAmbient = Color3.fromRGB(180, 180, 180)
+	lighting.Ambient = Color3.fromRGB(196, 182, 160)
+	lighting.OutdoorAmbient = Color3.fromRGB(202, 188, 166)
 	lighting.GlobalShadows = true
 	lighting.FogStart = 100000
 	lighting.FogEnd = 100000
@@ -396,8 +417,8 @@ function World.buildWorld()
 		spawn.Name = "SpawnPoint"
 		spawn.Size = Vector3.new(8, 1, 8)
 		spawn.CFrame = CFrame.new(x, 0.5, 0)
-		spawn.Color = Color3.fromRGB(120, 255, 120)
-		spawn.Material = Enum.Material.Neon
+		spawn.Color = Color3.fromRGB(228, 212, 186)
+		spawn.Material = Enum.Material.SmoothPlastic
 		spawn.Neutral = true
 		spawn.Duration = 0
 		spawn.Anchored = true

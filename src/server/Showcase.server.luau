@@ -87,8 +87,9 @@ local function fillSceneryBase(baseIndex)
 		{ "lasagna", nil },
 		{ "espresso", nil },
 	}
+	local scenerySlots = { 1, 5, 9, 2, 6, 10 }
 	for i, entry in ipairs(sceneryRoster) do
-		local slot = i
+		local slot = scenerySlots[i] or i
 		local top = World.getPedestalTopPosition(baseIndex, slot)
 		if top ~= nil then
 			local model = Roster.buildCharacter(entry[1], entry[2])
@@ -108,7 +109,7 @@ local function stageStealScene()
 	local thiefFolder = Instance.new("Folder")
 	thiefFolder.Name = "ShowcaseThief"
 	thiefFolder.Parent = Workspace
-	local dummyPos = Vector3.new(11, 0, -20)
+	local dummyPos = Vector3.new(10.5, 0, -24)
 	local function dummyPart(name, size, color, offset)
 		local p = Instance.new("Part")
 		p.Name = name
@@ -130,39 +131,40 @@ local function stageStealScene()
 	-- The stolen Lasagna, glowing, overhead.
 	local lasagna = Roster.buildCharacter("lasagna", nil)
 	lasagna.Parent = Workspace
-	lasagna:PivotTo(CFrame.new(dummyPos + Vector3.new(0, 7.5, 0)))
+	lasagna:PivotTo(CFrame.new(dummyPos + Vector3.new(0, 7.2, 0)))
 	table.insert(showcaseModels, lasagna)
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "StealTag"
-	gui.Size = UDim2.fromOffset(260, 60)
-	gui.ExtentsOffsetWorldSpace = Vector3.new(0, 7.2, 0)
+	gui.Size = UDim2.fromOffset(180, 40)
+	gui.ExtentsOffsetWorldSpace = Vector3.new(0, 14, 0)
+	gui.MaxDistance = 120
 	gui.AlwaysOnTop = true
 	gui.LightInfluence = 0
 	gui.Parent = lasagna.PrimaryPart
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 0.2
+	label.BackgroundTransparency = 1
 	label.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
 	label.Text = "[STEALING!]"
-	label.TextColor3 = Color3.fromRGB(255, 60, 60)
-	label.TextSize = 28
+	label.TextColor3 = Color3.fromRGB(255, 85, 80)
+	label.TextSize = 20
 	label.Font = Enum.Font.GothamBlack
 	label.TextStrokeTransparency = 0
-	label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	label.TextStrokeColor3 = Color3.fromRGB(24, 16, 16)
 	label.Parent = gui
 	-- The gate sign next to the scene.
-	makeFloatingSign("UNLOCKED 0:04", Vector3.new(15, 10, -16), Color3.fromRGB(255, 80, 80))
+	makeFloatingSign("UNLOCKED 0:04", Vector3.new(14.5, 9.5, -15), Color3.fromRGB(255, 80, 80))
 end
 
 local function stageAll()
 	-- Rarity parade frozen on the conveyor: Common, Epic, Secret Dorato.
 	local conveyor = Registry.waitFor("Conveyor", 10)
 	if conveyor ~= nil then
-		conveyor.spawnParade("gnocchi", nil, -40)
-		conveyor.spawnParade("espresso", nil, -20)
-		conveyor.spawnParade("gorgonzola", "dorato", 0)
+		conveyor.spawnParade("gnocchi", nil, -54)
+		conveyor.spawnParade("espresso", nil, -34)
+		conveyor.spawnParade("gorgonzola", "dorato", -12)
 	end
-	fillSceneryBase(2)
+	fillSceneryBase(4)
 	stageStealScene()
 	-- Gentle bobbing for the scenery models.
 	task.spawn(function()

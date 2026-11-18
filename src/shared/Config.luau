@@ -12,14 +12,14 @@ Config.BASE_COUNT = 8
 Config.PEDESTALS_PER_BASE = 12
 Config.LOCK_DURATION_SECONDS = 60
 Config.BASE_COLORS = {
-	Color3.fromRGB(255, 85, 85), -- red
-	Color3.fromRGB(85, 170, 255), -- blue
-	Color3.fromRGB(85, 255, 127), -- green
-	Color3.fromRGB(255, 200, 40), -- yellow
-	Color3.fromRGB(200, 100, 255), -- purple
-	Color3.fromRGB(255, 140, 60), -- orange
-	Color3.fromRGB(80, 220, 220), -- cyan
-	Color3.fromRGB(255, 110, 200), -- pink
+	Color3.fromRGB(232, 118, 112), -- terracotta coral
+	Color3.fromRGB(112, 172, 232), -- capri blue
+	Color3.fromRGB(118, 206, 138), -- pistachio green
+	Color3.fromRGB(240, 198, 92), -- amalfi lemon
+	Color3.fromRGB(182, 136, 228), -- wisteria lavender
+	Color3.fromRGB(238, 154, 102), -- apricot peach
+	Color3.fromRGB(106, 200, 198), -- adriatic seafoam
+	Color3.fromRGB(236, 138, 182), -- gelato rose
 }
 
 -- Conveyor
