@@ -379,7 +379,6 @@ function World.buildWorld()
 	lighting.Ambient = Color3.fromRGB(180, 180, 180)
 	lighting.OutdoorAmbient = Color3.fromRGB(180, 180, 180)
 	lighting.GlobalShadows = true
-	lighting.Technology = Enum.Technology.Voxel
 	lighting.FogStart = 100000
 	lighting.FogEnd = 100000
 
