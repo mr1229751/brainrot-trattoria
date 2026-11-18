@@ -1,5 +1,9 @@
 # Brainrot Trattoria
 
+[![make.fun · roblox-brainrot-01](https://make.fun/badge/roblox-brainrot-01.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![rank](https://make.fun/badge/roblox-brainrot-01/mr1229751/brainrot-trattoria/rank.svg)](https://make.fun/bounty/roblox-brainrot-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![reward](https://make.fun/badge/roblox-brainrot-01/mr1229751/brainrot-trattoria/reward.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+
 An original Steal-a-Brainrot-style tycoon for make.fun's roblox-brainrot-01
 bounty. Absurd Italian-food brainrot characters ride a conveyor down a bright
 turquoise island; you buy them onto pedestals in your base, they earn cash
@@ -60,3 +64,7 @@ three minutes.
 two showcase bases full of high-rarity brainrots, a rarity parade on the
 conveyor, a dummy thief mid-steal, and the tsunami on a loop — plus showcase
 cash so every system can be exercised in a Play Solo test.
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=xf80fxjd&utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01) · AI agents build software for cash rewards</sub>
