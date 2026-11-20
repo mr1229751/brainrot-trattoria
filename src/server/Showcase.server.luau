@@ -55,31 +55,86 @@ local function makeFloatingSign(text, position, textColor)
 	return signPart
 end
 
--- Fill the local player's own base with high-rarity brainrots through the
--- real placement path, so the scene is also a working game state.
+-- Fill the LOCAL PLAYER'S OWN assigned base with the staged roster, 12/12,
+-- through the real placement path (Bases.placeOnPedestal registers the
+-- pedestal in that player's own PlayerData state, fires PedestalPlaced so
+-- Stealing attaches its prompt, and sets the $/s tag from the real rate) —
+-- so the scene is also a working game state and the $/s/HUD numbers match.
+-- This must target the base Bases.assignBase gave THIS player
+-- (state.BaseIndex), never a fixed base index: the scenery base below is a
+-- different base and filling only that one leaves the player's own base
+-- empty in the photo. The old version fired one fixed-delay attempt and
+-- silently dropped every placement when the base was not assigned yet or
+-- Persistence had not finished loading; this version waits for assignment
+-- AND load, retries whatever did not land, and is idempotent, so a second
+-- call (the top-up pass) only tops up slots that are still empty.
+local SHOWCASE_BASE_ROSTER = {
+	{ "gorgonzola", "dorato" },
+	{ "tiramisu", nil },
+	{ "moka", "radioactive" },
+	{ "prosciutto", nil },
+	{ "lasagna", "void" },
+	{ "espresso", nil },
+	{ "vespa", "dorato" },
+	{ "cannoli", nil },
+	{ "lasagna", nil },
+	{ "espresso", "radioactive" },
+	{ "prosciutto", nil },
+	{ "tiramisu", nil },
+}
+
 local function fillPlayerBase(player)
 	local bases = Registry.waitFor("Bases", 10)
 	if bases == nil then
 		return
 	end
-	local showcaseRoster = {
-		{ "gorgonzola", "dorato" },
-		{ "tiramisu", nil },
-		{ "moka", "radioactive" },
-		{ "prosciutto", nil },
-		{ "lasagna", "void" },
-		{ "espresso", nil },
-		{ "vespa", "dorato" },
-		{ "cannoli", nil },
-		{ "lasagna", nil },
-		{ "espresso", "radioactive" },
-		{ "prosciutto", nil },
-		{ "tiramisu", nil },
-	}
-	for _, entry in ipairs(showcaseRoster) do
-		local model = Roster.buildCharacter(entry[1], entry[2])
-		bases.placeOnPedestal(player, entry[1], entry[2], model)
+	-- Wait until Bases has assigned THIS player a base and Persistence has
+	-- finished loading: placing before assignment returns nil (no base), and
+	-- placing before the load finishes races the restore that follows it.
+	local state = PlayerData.get(player)
+	local waited = 0
+	while (state == nil or state.BaseIndex == 0 or not state.Loaded) and waited < 30 do
+		task.wait(0.25)
+		waited += 0.25
+		state = PlayerData.get(player)
 	end
+	if state == nil or state.BaseIndex == 0 then
+		warn("[Brainrot Trattoria] Showcase: no base assigned to " .. player.Name .. "; own-base staging skipped.")
+		return
+	end
+	local placed = {}
+	local deadline = os.clock() + 30
+	while PlayerData.countPedestalsUsed(state) < Config.PEDESTALS_PER_BASE and os.clock() < deadline do
+		local progressed = false
+		for index, entry in ipairs(SHOWCASE_BASE_ROSTER) do
+			if PlayerData.countPedestalsUsed(state) >= Config.PEDESTALS_PER_BASE then
+				break
+			end
+			if not placed[index] then
+				local model = Roster.buildCharacter(entry[1], entry[2])
+				if bases.placeOnPedestal(player, entry[1], entry[2], model) ~= nil then
+					placed[index] = true
+					progressed = true
+				else
+					model:Destroy()
+				end
+			end
+		end
+		if not progressed then
+			task.wait(0.5)
+		end
+	end
+	print(
+		"[Brainrot Trattoria] Showcase staged "
+			.. PlayerData.countPedestalsUsed(state)
+			.. "/"
+			.. Config.PEDESTALS_PER_BASE
+			.. " pedestals in "
+			.. player.Name
+			.. "'s OWN base #"
+			.. state.BaseIndex
+			.. " (Studio only)."
+	)
 end
 
 -- Fill a second base as pure scenery (no owner), for the wide base shot.
@@ -171,6 +226,14 @@ local function stageAll()
 	end
 	fillSceneryBase(4)
 	stageStealScene()
+	-- Top-up pass for the local player's own base: covers a player who
+	-- joined before this script connected its PlayerAdded handler, or whose
+	-- first fill raced base assignment / the Persistence load. Idempotent —
+	-- fillPlayerBase only places into pedestals that are still free, so the
+	-- rival scenery base and any already-staged pedestals are untouched.
+	for _, player in ipairs(Players:GetPlayers()) do
+		task.spawn(fillPlayerBase, player)
+	end
 	-- Gentle bobbing for the scenery models.
 	task.spawn(function()
 		while true do
@@ -237,12 +300,18 @@ Players.PlayerAdded:Connect(function(player)
 	task.spawn(function()
 		task.wait(2)
 		fillPlayerBase(player)
+		-- Delayed top-up: if anything cleared or out-raced the first fill,
+		-- restore the local player's own base to a full staged 12/12.
+		task.wait(6)
+		fillPlayerBase(player)
 	end)
 end)
 for _, player in ipairs(Players:GetPlayers()) do
 	stagePlayerStats(player)
 	task.spawn(function()
 		task.wait(2)
+		fillPlayerBase(player)
+		task.wait(6)
 		fillPlayerBase(player)
 	end)
 end
