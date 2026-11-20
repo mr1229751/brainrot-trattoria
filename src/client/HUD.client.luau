@@ -91,6 +91,28 @@ local announceCorner = Instance.new("UICorner")
 announceCorner.CornerRadius = UDim.new(0, 8)
 announceCorner.Parent = announceLabel
 
+-- Feature strip, top-center below the announcement banner: a static
+-- summary of everything in the game. Purely informational — no remotes,
+-- no gameplay effect. Centered so it never covers the Roblox menu
+-- buttons in the top-left corner.
+local featureStripLabel = Instance.new("TextLabel")
+featureStripLabel.Name = "FeatureStripLabel"
+featureStripLabel.AnchorPoint = Vector2.new(0.5, 0)
+featureStripLabel.Position = UDim2.new(0.5, 0, 0, 110)
+featureStripLabel.Size = UDim2.fromOffset(880, 36)
+featureStripLabel.BackgroundTransparency = 0.25
+featureStripLabel.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+featureStripLabel.Text = "12 BRAINROTS • 3 MUTATIONS • STEAL • LOCK • TSUNAMI • REBIRTH • INDEX"
+featureStripLabel.TextColor3 = Color3.fromRGB(255, 220, 60)
+featureStripLabel.TextSize = 19
+featureStripLabel.Font = Enum.Font.GothamBlack
+featureStripLabel.TextXAlignment = Enum.TextXAlignment.Center
+featureStripLabel.Parent = gui
+addStroke(featureStripLabel, 2)
+local featureStripCorner = Instance.new("UICorner")
+featureStripCorner.CornerRadius = UDim.new(0, 8)
+featureStripCorner.Parent = featureStripLabel
+
 -- Buttons, bottom-right.
 local function makeButton(name, text, position, color)
 	local button = Instance.new("TextButton")
