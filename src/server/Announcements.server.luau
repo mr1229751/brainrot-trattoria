@@ -15,6 +15,15 @@ function Announcements.announceAll(text, color)
 	end
 end
 
+-- Send a banner to one player only (e.g. why their purchase failed). The HUD
+-- renders FireClient on the same remote exactly like a global announcement.
+function Announcements.notifyPlayer(player, text, color)
+	local remotes = Registry.Remotes
+	if remotes ~= nil and remotes.AnnounceEvent ~= nil then
+		remotes.AnnounceEvent:FireClient(player, text, color)
+	end
+end
+
 -- A brainrot worth shouting about just rolled onto the belt.
 function Announcements.announceSpawn(charDef, mutationId)
 	if charDef == nil then

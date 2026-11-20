@@ -42,11 +42,15 @@ function PlayerData.forEach(callback)
 end
 
 -- Total $/s the player's pedestals earn before the rebirth multiplier.
+-- Pedestals is a sparse table (a stolen slot leaves a nil hole), so this
+-- must scan every slot numerically: ipairs would stop at the first hole
+-- and silently drop the income of every pedestal after it.
 function PlayerData.getBaseIncomePerSecond(state)
 	local total = 0
-	for _, slot in ipairs(state.Pedestals) do
-		if slot ~= nil then
-			total += slot.Rate
+	for slot = 1, 12 do
+		local entry = state.Pedestals[slot]
+		if entry ~= nil then
+			total += entry.Rate
 		end
 	end
 	return total
@@ -64,8 +68,8 @@ end
 
 function PlayerData.countPedestalsUsed(state)
 	local count = 0
-	for _, slot in ipairs(state.Pedestals) do
-		if slot ~= nil then
+	for slot = 1, 12 do
+		if state.Pedestals[slot] ~= nil then
 			count += 1
 		end
 	end

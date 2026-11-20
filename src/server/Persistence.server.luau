@@ -89,9 +89,13 @@ local function savePlayer(player)
 		return
 	end
 	local pedestals = {}
-	for _, slot in ipairs(state.Pedestals) do
-		if slot ~= nil then
-			table.insert(pedestals, { CharId = slot.CharId, Mutation = slot.Mutation })
+	-- Pedestals is sparse (nil holes where brainrots were stolen): scan all
+	-- 12 slots numerically, because ipairs stops at the first hole and would
+	-- silently leave every later pedestal out of the save.
+	for slot = 1, Config.PEDESTALS_PER_BASE do
+		local entry = state.Pedestals[slot]
+		if entry ~= nil then
+			table.insert(pedestals, { CharId = entry.CharId, Mutation = entry.Mutation })
 		end
 	end
 	local data = {

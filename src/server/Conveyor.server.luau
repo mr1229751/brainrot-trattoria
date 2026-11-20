@@ -4,6 +4,11 @@
 -- ProximityPrompt when they have the cash and a free pedestal. A bought
 -- brainrot rides across to its pedestal. Frozen models (the Showcase parade)
 -- sit still on the belt instead of moving.
+--
+-- Purchase contract: a failed buy always tells the buyer why (no base, base
+-- full, not enough cash) instead of failing silently, and once cash is taken
+-- the purchase either lands on a pedestal or the cash is refunded in full —
+-- a buyer never pays for a brainrot that vanishes mid-delivery.
 
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -17,7 +22,7 @@ local Registry = require(script.Parent.Registry)
 local Conveyor = {}
 
 local beltFolder = nil
-local belt = {} -- {Model, CharId, Mutation, Price, Phase}
+local belt = {} -- {Model, CharId, Mutation, Price, Phase, Sold, Claimed, Prompt}
 
 local function removeFromBelt(entry)
 	for i, item in ipairs(belt) do
@@ -28,6 +33,26 @@ local function removeFromBelt(entry)
 	end
 end
 
+-- Tell one buyer why a purchase did not go through (the HUD shows the same
+-- banner the global announcements use, but only on that player's screen).
+local function notifyBuyer(player, text)
+	local announcements = Registry.get("Announcements")
+	if announcements ~= nil and announcements.notifyPlayer ~= nil then
+		announcements.notifyPlayer(player, text, Color3.fromRGB(255, 120, 90))
+	end
+end
+
+-- Undo a purchase whose delivery failed after the cash was taken: refund in
+-- full and destroy the orphaned model so it cannot linger in the world
+-- unowned, unsold and still prompting.
+local function refundPurchase(player, entry, economy)
+	economy.addCash(player, entry.Price)
+	if entry.Model ~= nil and entry.Model.Parent ~= nil then
+		entry.Model:Destroy()
+	end
+	notifyBuyer(player, "Purchase failed - refunded " .. Roster.formatMoney(entry.Price))
+end
+
 local function attachBuyPrompt(entry)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Buy " .. Roster.formatMoney(entry.Price)
@@ -36,10 +61,22 @@ local function attachBuyPrompt(entry)
 	prompt.MaxActivationDistance = 14
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = entry.Model.PrimaryPart
+	entry.Prompt = prompt
 	prompt.Triggered:Connect(function(player)
+		-- Claim the entry synchronously, before the handler's first yield:
+		-- two triggers in the same frame (two buyers, or a double-tap) would
+		-- otherwise both pass the Sold check while waitFor yields, and both
+		-- get charged for the same brainrot. Any pre-payment failure below
+		-- releases the claim so the brainrot stays buyable.
+		if entry.Sold or entry.Claimed then
+			return
+		end
+		entry.Claimed = true
 		local bases = Registry.waitFor("Bases", 5)
 		local economy = Registry.waitFor("Economy", 5)
 		if bases == nil or economy == nil then
+			entry.Claimed = false
+			notifyBuyer(player, "Shop is not ready yet - try again in a moment!")
 			return
 		end
 		if entry.Model.Parent == nil then
@@ -47,19 +84,30 @@ local function attachBuyPrompt(entry)
 		end
 		local state = PlayerData.get(player)
 		if state == nil or state.BaseIndex == 0 then
+			entry.Claimed = false
+			notifyBuyer(player, "You need a base before you can buy!")
 			return
 		end
 		if PlayerData.findFreePedestalSlot(state) == nil then
+			entry.Claimed = false
+			notifyBuyer(player, "Your base is full - no free pedestal!")
 			return
 		end
 		if not economy.spendCash(player, entry.Price) then
+			entry.Claimed = false
+			notifyBuyer(player, "Not enough cash - this costs " .. Roster.formatMoney(entry.Price) .. "!")
 			return
 		end
+		-- Cash is taken: from here the purchase must land or be refunded.
+		entry.Sold = true
+		if entry.Prompt ~= nil then
+			entry.Prompt:Destroy()
+			entry.Prompt = nil
+		end
 		removeFromBelt(entry)
-		-- Ride across to the pedestal, then slot in.
 		local targetSlot = PlayerData.findFreePedestalSlot(state)
 		if targetSlot == nil then
-			economy.addCash(player, entry.Price)
+			refundPurchase(player, entry, economy)
 			return
 		end
 		local basesModule = bases
@@ -67,6 +115,7 @@ local function attachBuyPrompt(entry)
 			local world = require(script.Parent.World)
 			local top = world.getPedestalTopPosition(state.BaseIndex, targetSlot)
 			if top == nil then
+				refundPurchase(player, entry, economy)
 				return
 			end
 			local start = entry.Model:GetPivot()
@@ -74,6 +123,7 @@ local function attachBuyPrompt(entry)
 			local steps = 24
 			for i = 1, steps do
 				if entry.Model.Parent == nil then
+					refundPurchase(player, entry, economy)
 					return
 				end
 				local alpha = i / steps
@@ -81,8 +131,14 @@ local function attachBuyPrompt(entry)
 				entry.Model:PivotTo(start:Lerp(finish, alpha) * CFrame.new(0, arc, 0))
 				task.wait(0.03)
 			end
-			if entry.Model.Parent ~= nil then
-				basesModule.placeOnPedestal(player, entry.CharId, entry.Mutation, entry.Model)
+			if entry.Model.Parent == nil then
+				refundPurchase(player, entry, economy)
+				return
+			end
+			local placedSlot = basesModule.placeOnPedestal(player, entry.CharId, entry.Mutation, entry.Model)
+			if placedSlot == nil then
+				refundPurchase(player, entry, economy)
+				return
 			end
 		end)
 	end)
@@ -105,6 +161,9 @@ local function spawnBrainrot(charId, mutationId, z, frozen)
 		Mutation = mutationId,
 		Price = def.Price,
 		Phase = math.random() * math.pi * 2,
+		Sold = false,
+		Claimed = false,
+		Prompt = nil,
 	}
 	table.insert(belt, entry)
 	attachBuyPrompt(entry)
