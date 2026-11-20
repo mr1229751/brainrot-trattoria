@@ -1,4 +1,4 @@
--- Guide.client.luau — the Brainrotpedia. A toggle button opens a scrolling
+-- Guide.client.luau — the Brainrotpedia. A toggle button opens a compact
 -- guide listing all twelve characters with their rarity colour, price and
 -- $/s, plus the three mutations and what they multiply. Players learn the
 -- ladder without leaving the game; the list is built from the shared Roster
@@ -46,7 +46,7 @@ local panel = Instance.new("Frame")
 panel.Name = "GuidePanel"
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
-panel.Size = UDim2.fromOffset(520, 560)
+panel.Size = UDim2.fromOffset(520, 660)
 panel.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
 panel.BackgroundTransparency = 0.1
 panel.Visible = false
@@ -58,11 +58,11 @@ addStroke(panel, 2)
 
 local title = Instance.new("TextLabel")
 title.Name = "GuideTitle"
-title.Size = UDim2.new(1, 0, 0, 48)
+title.Size = UDim2.new(1, 0, 0, 36)
 title.BackgroundTransparency = 1
 title.Text = "BRAINROTPEDIA"
 title.TextColor3 = Color3.fromRGB(255, 220, 60)
-title.TextSize = 30
+title.TextSize = 24
 title.Font = Enum.Font.GothamBlack
 title.Parent = panel
 addStroke(title, 2)
@@ -70,20 +70,20 @@ addStroke(title, 2)
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "GuideClose"
 closeButton.AnchorPoint = Vector2.new(1, 0)
-closeButton.Position = UDim2.new(1, -8, 0, 8)
-closeButton.Size = UDim2.fromOffset(36, 36)
+closeButton.Position = UDim2.new(1, -6, 0, 6)
+closeButton.Size = UDim2.fromOffset(28, 28)
 closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 closeButton.Text = "X"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.TextSize = 22
+closeButton.TextSize = 18
 closeButton.Font = Enum.Font.GothamBlack
 closeButton.Parent = panel
 addStroke(closeButton, 2)
 
 local scroller = Instance.new("ScrollingFrame")
 scroller.Name = "GuideList"
-scroller.Position = UDim2.new(0, 10, 0, 56)
-scroller.Size = UDim2.new(1, -20, 1, -66)
+scroller.Position = UDim2.new(0, 10, 0, 42)
+scroller.Size = UDim2.new(1, -20, 1, -50)
 scroller.BackgroundTransparency = 1
 scroller.ScrollBarThickness = 6
 scroller.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -91,12 +91,12 @@ scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroller.Parent = panel
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 6)
+layout.Padding = UDim.new(0, 3)
 layout.Parent = scroller
 
 local function addRow(name, detail, color)
 	local row = Instance.new("Frame")
-	row.Size = UDim2.new(1, -8, 0, 44)
+	row.Size = UDim2.new(1, -8, 0, 28)
 	row.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
 	row.Parent = scroller
 	local rowCorner = Instance.new("UICorner")
@@ -108,7 +108,7 @@ local function addRow(name, detail, color)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = name
 	nameLabel.TextColor3 = color
-	nameLabel.TextSize = 19
+	nameLabel.TextSize = 16
 	nameLabel.Font = Enum.Font.GothamBlack
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = row
@@ -119,7 +119,7 @@ local function addRow(name, detail, color)
 	detailLabel.BackgroundTransparency = 1
 	detailLabel.Text = detail
 	detailLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	detailLabel.TextSize = 18
+	detailLabel.TextSize = 15
 	detailLabel.Font = Enum.Font.GothamBold
 	detailLabel.TextXAlignment = Enum.TextXAlignment.Right
 	detailLabel.Parent = row
