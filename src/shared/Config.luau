@@ -45,8 +45,14 @@ Config.REBIRTH_INCOME_BONUS_PER = 1.0 -- +100% income per rebirth
 Config.REBIRTH_SPEED_BONUS_PER = 0.10 -- +10% WalkSpeed per rebirth
 Config.REBIRTH_LUCK_MULTIPLIER_PER = 1.5 -- x1.5 mutation luck per rebirth
 
--- Showcase (Studio only)
-Config.SHOWCASE_CASH = 10000000
+-- Showcase (Studio only — these values are read solely by
+-- Showcase.server.luau, which returns before doing anything outside Studio,
+-- so they can never affect the live game.)
+-- SHOWCASE_CASH is exactly what three shrine rebirths cost from zero
+-- (25,000,000 + 200,000,000 + 1,600,000,000), and it stays below the
+-- leaderstats IntValue ceiling (2,147,483,647) so the HUD shows it in full.
+Config.SHOWCASE_CASH = 1825000000
+Config.SHOWCASE_REBIRTHS = 3
 Config.SHOWCASE_TSUNAMI_LOOP_SECONDS = 45
 
 -- World layout

@@ -5,7 +5,11 @@
 -- (Common, Epic, Secret Dorato in one view), a dummy avatar mid-steal carrying
 -- a glowing Lasagna Leviatano with a [STEALING!] tag beside a gate reading
 -- "UNLOCKED 0:04", and the tsunami warning + wave on a repeating loop. Also
--- grants the local player showcase cash so every system can be exercised.
+-- stages the local player's stats for the photos — REBIRTH x3 and the cash
+-- those three rebirths would have cost at the shrine — written into the real
+-- PlayerData state, so the HUD, the leaderstats and the $/s rate (with its
+-- x4 rebirth multiplier) all show the staged numbers exactly as the live
+-- game would show them for a real x3 player.
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -17,6 +21,7 @@ if not RunService:IsStudio() then
 end
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local PlayerData = require(ReplicatedStorage.Shared.PlayerData)
 local Roster = require(ReplicatedStorage.Shared.Roster)
 local World = require(script.Parent.World)
 local Registry = require(script.Parent.Registry)
@@ -190,23 +195,52 @@ local function stageAll()
 	end)
 end
 
-local function grantShowcaseCash(player)
-	task.wait(1)
-	local economy = Registry.waitFor("Economy", 10)
-	if economy ~= nil then
-		economy.setCash(player, Config.SHOWCASE_CASH)
+-- Stage the photo stats in the real player state: rebirth count first, then
+-- cash. Economy.setCash re-syncs the leaderstats from the state, so one call
+-- updates the HUD's cash, its $/s (recomputed with the rebirth multiplier)
+-- and the REBIRTH badge the HUD reads from the Rebirths attribute. Waits for
+-- Persistence to finish loading first: a late load would otherwise restore
+-- the saved cash/rebirths (or the new-player starting values) over the top
+-- of the staging. Falls through after 10s if no load ever completes.
+local function stagePlayerStats(player)
+	local state = PlayerData.get(player)
+	local waited = 0
+	while (state == nil or not state.Loaded) and waited < 10 do
+		task.wait(0.1)
+		waited += 0.1
+		state = PlayerData.get(player)
 	end
+	if state == nil then
+		return
+	end
+	local economy = Registry.waitFor("Economy", 10)
+	if economy == nil then
+		return
+	end
+	state.Rebirths = Config.SHOWCASE_REBIRTHS
+	economy.setCash(player, Config.SHOWCASE_CASH)
+	-- Keep the avatar consistent with a real x3 player: Bases re-applies the
+	-- rebirth WalkSpeed from the state on every respawn, but the character
+	-- that is already standing in the world keeps the speed it spawned with.
+	local character = player.Character
+	if character ~= nil then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid ~= nil then
+			humanoid.WalkSpeed = 16 * Config.getRebirthSpeedMultiplier(state.Rebirths)
+		end
+	end
+	print("[Brainrot Trattoria] Showcase stats staged for " .. player.Name .. ": REBIRTH x" .. state.Rebirths .. ", cash " .. state.Cash .. " (Studio only).")
 end
 
 Players.PlayerAdded:Connect(function(player)
-	grantShowcaseCash(player)
+	stagePlayerStats(player)
 	task.spawn(function()
 		task.wait(2)
 		fillPlayerBase(player)
 	end)
 end)
 for _, player in ipairs(Players:GetPlayers()) do
-	grantShowcaseCash(player)
+	stagePlayerStats(player)
 	task.spawn(function()
 		task.wait(2)
 		fillPlayerBase(player)
